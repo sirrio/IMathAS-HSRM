@@ -1586,7 +1586,7 @@ if ($overwriteBody==1) {
 
 			</tbody>
 		</table>
-		<script type=\"text/javascript\">
+		<script type="text/javascript">
 			initSortTable('myTable',Array(false,'S','S',false,false,false),true);
 		</script>
 	</form>

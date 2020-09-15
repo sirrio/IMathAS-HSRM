@@ -195,6 +195,9 @@ export const actions = {
     data.append('practice', store.assessInfo.in_practice);
     data.append('regen', regen ? 1 : 0);
     data.append('jumptoans', jumptoans ? 1 : 0);
+    if (store.assessInfo.preview_all) {
+      data.append('preview_all', true);
+    }
     if (Object.keys(store.autosaveQueue).length > 0) {
       actions.clearAutosaveTimer();
       this.addAutosaveData(data);
@@ -293,6 +296,15 @@ export const actions = {
     if (typeof window.tinyMCE !== 'undefined') { window.tinyMCE.triggerSave(); }
     store.inTransit = true;
     const data = {};
+    // get values again, in case event trigger didn't happen
+    window.$('.swbox').each(function () {
+      const qn = parseInt(this.id.substr(2));
+      if (!store.assessInfo.questions[qn].hasOwnProperty('work') ||
+        this.value !== store.assessInfo.questions[qn].work
+      ) {
+        store.work[qn] = this.value;
+      }
+    });
     for (const qn in store.work) {
       data[qn] = store.work[qn];
     }
@@ -374,6 +386,10 @@ export const actions = {
     let changedWork = false;
     for (let k = 0; k < qns.length; k++) {
       const qn = parseInt(qns[k]);
+      // get work again, in case triggers didn't work
+      if (document.getElementById('sw' + qn)) {
+        store.work[qn] = document.getElementById('sw' + qn).value;
+      }
       if (store.work[qn] && store.work[qn] !== actions.getInitValue(qn, 'sw' + qn)) {
         changedWork = true;
         break;
@@ -685,6 +701,9 @@ export const actions = {
 
     if (store.assessInfo.in_practice) {
       data.append('practice', true);
+    }
+    if (store.assessInfo.preview_all) {
+      data.append('preview_all', true);
     }
     if (async === false && navigator.sendBeacon) {
       navigator.sendBeacon(

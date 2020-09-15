@@ -380,4 +380,3 @@ if (isset($_POST['checked'])) { //modifying existing
 		require("../footer.php");
 		exit;
 	}
-?>

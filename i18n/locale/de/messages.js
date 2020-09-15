@@ -242,4 +242,8 @@ var i18njs = {"Submit":"Absenden",
 "Error: Incorrect number of points":"Fehler: Falsche Anzahl von Punkten",
 "Submitting...":"Sende...",
 "Question Submitted":"Frage abgeschickt",
+<<<<<<< HEAD
 "Has Rubric":"Hat eine Rubrik"};
+=======
+"Has Rubric":"Hat eine Rubrik"};
+>>>>>>> 2d113c8908c626ca6b85f293c683f3af95a5dace
