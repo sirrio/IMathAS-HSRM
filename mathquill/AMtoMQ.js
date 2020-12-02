@@ -125,8 +125,8 @@ var AMQsymbols = [
 {input:":)", tag:"mo", output:"\u232A", tex:"rangle", ttype:RIGHTBRACKET},
 {input:"<<", tag:"mo", output:"\u2329", tex:"langle", ttype:LEFTBRACKET},
 {input:">>", tag:"mo", output:"\u232A", tex:"rangle", ttype:RIGHTBRACKET},
-//{input:"{:", tag:"mo", output:"{:", tex:null, ttype:LEFTBRACKET, invisible:true},
-//{input:":}", tag:"mo", output:":}", tex:null, ttype:RIGHTBRACKET, invisible:true},
+{input:"{:", tag:"mo", output:"{:", tex:null, ttype:LEFTBRACKET, invisible:true},
+{input:":}", tag:"mo", output:":}", tex:null, ttype:RIGHTBRACKET, invisible:true},
 
 //miscellaneous symbols
 {input:"int",  tag:"mo", output:"\u222B", tex:null, ttype:CONST},
@@ -441,7 +441,8 @@ function AMQTparseSexpr(str) { //parses str and returns [node,tailstr]
 	    }
     } else {
 	    if (typeof symbol.invisible == "boolean" && symbol.invisible)
-		    node = '{\\left.'+result[0]+'}';
+            //node = '{\\left.'+result[0]+'}';
+            node = '{'+result[0]+'}';
 	    else {
 		    node = '{\\left'+AMQTgetTeXbracket(symbol) + result[0]+'}';
 	    }
@@ -696,14 +697,14 @@ function AMQTparseExpr(str,rightbracket) {
       newFrag += node;
       addedright = true;
     } else {
-	    newFrag += '\\right.';
+	    //newFrag += '\\right.';
 	    addedright = true;
     }
 
   }
   if(AMQnestingDepth>0 && !addedright) {
-	  newFrag += '\\right.'; //adjust for non-matching left brackets
-	  //todo: adjust for non-matching right brackets
+      newFrag += '\\right)'; //adjust for non-matching left brackets.  should be \\right. but MQ can't handle that
+      //todo: adjust for non-matching right brackets
   }
   return [newFrag,str];
 }
@@ -712,7 +713,7 @@ AMQinitSymbols();
 
 return function(str) {
  AMQnestingDepth = 0;
-  str = str.replace(/(&nbsp;|\u00a0|&#160;)/g,"");
+  str = str.replace(/(&nbsp;|\u00a0|&#160;|{::})/g,"");
   str = str.replace(/^\s*<([^<].*?[^>])>\s*$/,"<<$1>>");
   str = str.replace(/&gt;/g,">");
   str = str.replace(/&lt;/g,"<");

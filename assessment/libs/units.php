@@ -1,5 +1,8 @@
 <?php
 // Units checking
+// Contributed by Nick Chura
+// 
+// Based in part on https://github.com/openwebwork/pg/blob/master/lib/Units.pm, GPL licensed
 
 global $allowedmacros;
 
@@ -61,7 +64,9 @@ function parseunits($unitsExpression) {
       'min' => [60,array(0,0,1,0,0,0,0,0,0,0)],
       'minute' => [60,array(0,0,1,0,0,0,0,0,0,0)],
       'minutes' => [60,array(0,0,1,0,0,0,0,0,0,0)],
+      'h' => [60*60,array(0,0,1,0,0,0,0,0,0,0)],
       'hr' => [60*60,array(0,0,1,0,0,0,0,0,0,0)],
+      'hrs' => [60*60,array(0,0,1,0,0,0,0,0,0,0)],
       'hour' => [60*60,array(0,0,1,0,0,0,0,0,0,0)],
       'hours' => [60*60,array(0,0,1,0,0,0,0,0,0,0)],
       'day' => [24*60*60,array(0,0,1,0,0,0,0,0,0,0)],
@@ -86,6 +91,7 @@ function parseunits($unitsExpression) {
       'barn' => [1E-28,array(0,2,0,0,0,0,0,0,0,0)],
       'barns' => [1E-28,array(0,2,0,0,0,0,0,0,0,0)],
     //Volume
+      'l' => [0.001,array(0,3,0,0,0,0,0,0,0,0)],
       'L' => [0.001,array(0,3,0,0,0,0,0,0,0,0)],
       'liter' => [0.001,array(0,3,0,0,0,0,0,0,0,0)],
       'litre' => [0.001,array(0,3,0,0,0,0,0,0,0,0)],
@@ -346,9 +352,9 @@ function parseunits($unitsExpression) {
     $unitsExpression = preg_replace('/([0-9])(\.)([a-zA-Z])/','$1$2*$3',$unitsExpression); //allows numerical factor to end in a decimal point
     $unitsExpression = preg_replace('/(\s*\-\s*)([a-zA-Z])/','*$2',$unitsExpression); //interprets dash as multiplication
     $unitsExpression = preg_replace('/([a-zA-Z])(\s*\-\s*)/','$1*',$unitsExpression); //Not sure if this is standard notation.
+    $unitsExpression = preg_replace('/\(\s*(.*?)\s*\)\s*\//', '$1/', $unitsExpression); // strip paren around numerator
+    $unitsExpression = preg_replace('/\/\s*\(\s*(.*?)\s*\)/', '/$1', $unitsExpression); // strip paren around denom
     $unitsExpression = preg_replace('/\s*[\*\s]\s*/','*',$unitsExpression); //trims space around multiplication symbol, spaces become *
-    $unitsExpression = preg_replace('/\((.*?)\)\s*\//', '$1/', $unitsExpression); // strip paren around numerator
-    $unitsExpression = preg_replace('/\/\s*\((.*?)\)/', '/$1', $unitsExpression); // strip paren around denom
 
     // unconvert E so is_numeric will recognize it
     $unitsExpression = preg_replace('/(\d+\.?\d*|\.\d+)\s*\*\s*10\s*\^\s*([\-]?\d+)/','$1E$2',$unitsExpression);

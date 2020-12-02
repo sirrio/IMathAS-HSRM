@@ -154,8 +154,8 @@ function init(paramarr, enableMQ, baseel) {
         //document.getElementById("pbtn"+qn).style.display = 'none';
       } //TODO: when matrix, clear preview on further input
     } else if (document.getElementById("qn"+qn)) {
-        var thisqn = qn;
-        document.getElementById("qn"+qn).addEventListener('keyup', function() { syntaxCheckMQ(thisqn) });
+        document.getElementById("qn"+qn).addEventListener('keyup', (function(thisqn) { 
+            return function () {syntaxCheckMQ(thisqn) }; })(qn));
     } //TODO: for non-preview types, still check syntax
     if (params.format === 'debit') {
       document.getElementById("qn"+qn).addEventListener('keyup', editdebit);
@@ -551,7 +551,7 @@ function setupDraw(qn) {
 }
 
 function initMultAns(qn) {
-  var hasnone = $("#qnwrap"+qn).find('label:last').text().match(/none\s+of/i);
+  var hasnone = $("#qnwrap"+qn).attr('data-multans') == 'hasnone';
   if (hasnone) {
     var boxes = $('input[name^="qn'+qn+'["]');
     boxes.on('change', function () {
@@ -569,7 +569,8 @@ function isBlank(str) {
 }
 function editdebit(e) {
   var el = e.target;
-	var descr = $('#qn'+(el.id.substr(2)*1 - 1));
+	//var descr = $('#qn'+(el.id.substr(2)*1 - 1));
+	var descr = $(el).closest('tr').find("input").first();
 	if (!isBlank(el.value) && descr.hasClass("iscredit")) {
     var leftpad = descr.css('padding-left');
 		if (descr.is('select')) {
@@ -583,7 +584,8 @@ function editdebit(e) {
 }
 function editcredit(e) {
   var el = e.target;
-	var descr = $('#qn'+(el.id.substr(2)*1 - 2));
+	//var descr = $('#qn'+(el.id.substr(2)*1 - 2));
+	var descr = $(el).closest('tr').find("input").first();
 	if (!isBlank(el.value) && !descr.hasClass("iscredit")) {
     var leftpad = parseInt(descr.css('padding-left'));
 		if (descr.is('select')) {
@@ -1158,11 +1160,11 @@ function processNumber(origstr, format) {
             if ((str.match(/\//g) || []).length > 1) {
                 err += _('Only one division symbol allowed in the units. ');
             }
-            str = str.replace(/\//g,'*').trim();
-            console.log(str);
+            str = str.replace(/\//g,'*').replace(/^\s*\*/,'').trim();
+
             if (str.length > 0) {
                 var pts = str.split(/\s*\*\s*/);
-                var unitsregex = /^(yotta|zetta|exa|peta|tera|giga|mega|kilo|hecto|deka|deci|centi|milli|micro|nano|pico|fempto|atto|zepto|yocto)?(m|meters?|km|cm|mm|um|microns?|nm|[aA]ngstroms?|pm|fm|fermi|in|inch|inches|ft|foot|feet|mi|miles?|furlongs?|yd|yards?|s|sec|seconds?|ms|us|ns|min|minutes?|hr|hours?|days?|weeks?|mo|months?|yr|years?|fortnights?|acres?|ha|hectares?|b|barns?|L|liters?|litres?|dL|ml|mL|cc|gal|gallons?|cups?|pints?|quarts?|tbsp|tablespoons?|tsp|teaspoons?|rad|radians?|deg|degrees?|gradians?|knots?|kt|c|mph|kph|kg|g|grams?|mg|tonnes?|k?[hH]z|[hH]ertz|revs?|revolutions?|cycles?|N|[nN]ewtons?|kips?|dynes?|lbs?|pounds?|tons?|[kK]?J|[jJ]oules?|ergs?|lbf|lbft|ftlb|cal|calories?|kcal|eV|electronvolts?|k[wW]h|btu|BTU|W|[wW]atts?|kW|hp|horsepower|Pa|[pP]ascals?|kPa|MPa|GPa|atms?|atmospheres?|bars?|barometers?|mbars?|[tT]orr|mmHg|cmWater|psi|C|[cC]oulombs?|V|[vV]olts?|mV|MV|[fF]arad|ohms?|ohms|amps?|[aA]mperes?|T|[tT]eslas?|G|Gauss|Wb|Weber|H|Henry|lm|lumens?|lx|lux|amu|[dD]altons?|me|mol|mole|Ci|curies?|R|roentgens?|sr|steradians?|Bq|bequerel|ls|lightsecond|ly|lightyears?|AU|au|parsecs?|kpc|solarmass|solarradius|degF|degC|degK|microns?|cmH2O)$/;
+                var unitsregex = /^(yotta|zetta|exa|peta|tera|giga|mega|kilo|hecto|deka|deci|centi|milli|micro|nano|pico|fempto|atto|zepto|yocto)?(m|meters?|km|cm|mm|um|microns?|nm|[aA]ngstroms?|pm|fm|fermi|in|inch|inches|ft|foot|feet|mi|miles?|furlongs?|yd|yards?|s|sec|seconds?|ms|us|ns|min|minutes?|h|hrs?|hours?|days?|weeks?|mo|months?|yr|years?|fortnights?|acres?|ha|hectares?|b|barns?|l|L|liters?|litres?|dL|ml|mL|cc|gal|gallons?|cups?|pints?|quarts?|tbsp|tablespoons?|tsp|teaspoons?|rad|radians?|deg|degrees?|gradians?|knots?|kt|c|mph|kph|kg|g|grams?|mg|tonnes?|k?[hH]z|[hH]ertz|revs?|revolutions?|cycles?|N|[nN]ewtons?|kips?|dynes?|lbs?|pounds?|tons?|[kK]?J|[jJ]oules?|ergs?|lbf|lbft|ftlb|cal|calories?|kcal|eV|electronvolts?|k[wW]h|btu|BTU|W|[wW]atts?|kW|hp|horsepower|Pa|[pP]ascals?|kPa|MPa|GPa|atms?|atmospheres?|bars?|barometers?|mbars?|[tT]orr|mmHg|cmWater|psi|C|[cC]oulombs?|V|[vV]olts?|mV|MV|[fF]arad|ohms?|ohms|amps?|[aA]mperes?|T|[tT]eslas?|G|Gauss|Wb|Weber|H|Henry|lm|lumens?|lx|lux|amu|[dD]altons?|me|mol|mole|Ci|curies?|R|roentgens?|sr|steradians?|Bq|bequerel|ls|lightsecond|ly|lightyears?|AU|au|parsecs?|kpc|solarmass|solarradius|degF|degC|degK|microns?|cmH2O)$/;
                 for (var i=0; i<pts.length; i++) {
                     if (!unitsregex.test(pts[i])) {
                         err += _('Unknown unit ')+'"'+pts[i]+'". ';
@@ -1176,7 +1178,7 @@ function processNumber(origstr, format) {
                 err += _('This is not an integer.');
             }
         } else {
-            if (!str.match(/^\s*(\d+\.?\d*|\.\d+|\d\.?\d*\s*E\s*[\-\+]?\d+)\s*$/)) {
+            if (!str.match(/^\s*\-?(\d+\.?\d*|\.\d+|\d\.?\d*\s*E\s*[\-\+]?\d+)\s*$/)) {
                 err += _('This is not a decimal or integer value.');
             }
         }
@@ -1233,6 +1235,7 @@ function processCalcInterval(fullstr, format, ineqvar) {
   var strarr = [], submitstrarr = [], dispstrarr = [], joinchar = 'U';
   //split into array of intervals
   if (format.indexOf('list')!=-1) {
+    fullstr = fullstr.replace(/\s*,\s*/g,',');
     joinchar = ',';
     var lastpos = 0;
     for (var pos = 1; pos<fullstr.length-1; pos++) {
