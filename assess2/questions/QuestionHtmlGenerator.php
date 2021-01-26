@@ -157,7 +157,7 @@ class QuestionHtmlGenerator
         if ($attemptn == 0) {
           $GLOBALS['assess2-curq-iscorrect'] = -1;
         } else {
-          if (count($partattemptn) == 1) {
+          if (count($partattemptn) == 1 && isset($partattemptn[0])) {
             $GLOBALS['assess2-curq-iscorrect'] = ($scoreiscorrect[$thisq] < 0 ? -1 : ($scoreiscorrect[$thisq]==1 ? 1 : 0));
           } else {
             $GLOBALS['assess2-curq-iscorrect'] = array();
@@ -342,7 +342,7 @@ class QuestionHtmlGenerator
             if ($quesData['qtype'] == "multipart" ||
               ($quesData['qtype'] == "conditional" && isset($seqPartDone))
             ) {
-              $_seqParts = preg_split('~(<p[^>]*>(<[^>]*>)*|<br\s*/?><br\s*/?>)\s*///+\s*((<[^>]*>)*</p[^>]*>|<br\s*/?><br\s*/?>)~', $toevalqtxt);
+              $_seqParts = preg_split('~(<p[^>]*>(<(span|em|strong)[^>]*>)*\s*///+\s*(<\/[^>]*>)*</p[^>]*>|<br\s*/?><br\s*/?>\s*(<(span|em|strong)[^>]*>)*\s*///+\s*(<\/[^>]*>)*\s*<br\s*/?><br\s*/?>)~', $toevalqtxt);
 
               if (count($_seqParts) > 1) {
                 if ($quesData['qtype'] != "conditional") {
@@ -667,8 +667,7 @@ class QuestionHtmlGenerator
          *  cases where $answerbox or [AB#] is already in the question text
          */
         if (isset($seqPartDone)) {
-          $seqParts = preg_split('~(<p[^>]*>(<[^>]*>)*|<br\s*/?><br\s*/?>)\s*///+\s*((<[^>]*>)*</p[^>]*>|<br\s*/?><br\s*/?>)~', $evaledqtext);
-
+          $seqParts = preg_split('~(<p[^>]*>(<(span|em|strong)[^>]*>)*\s*///+\s*(<\/[^>]*>)*</p[^>]*>|<br\s*/?><br\s*/?>\s*(<(span|em|strong)[^>]*>)*\s*///+\s*(<\/[^>]*>)*\s*<br\s*/?><br\s*/?>)~', $evaledqtext);
           if (count($seqParts) > 1) {
             $newqtext = '';
             $lastGroupDone = true;

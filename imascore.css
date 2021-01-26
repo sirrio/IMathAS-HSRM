@@ -154,7 +154,9 @@ div.block.grouptoggle + div.blockitems {
 	margin-top: 0px
 }
 .hidden,.pseudohidden {
-	display:none;
+    visibility: hidden;
+    position: absolute;
+    height: 0;
 }
 .showinmobile {
 	display:none;
@@ -907,6 +909,17 @@ button.plain:hover, button.plain:active {
   margin: 0;
   text-align: left;
   cursor: pointer;
+}
+#GB_footer {
+    position: absolute;
+    bottom: 0;
+    border-top: 1px solid #ccc;
+    width: 100%;
+    text-align: right;
+    margin-right: 20px;
+}
+#GB_footer button:last-child {
+    margin-right: 20px;
 }
 #GB_caption a, #GB_caption a:hover, #GB_caption a:focus {
 	color: #fff;

@@ -61,13 +61,8 @@
    $lastSessionTime = isset($GLOBALS['sessionLastAccess']) ? $GLOBALS['sessionLastAccess'] : $_SESSION['time'];
    if ((time()-$lastSessionTime)>24*60*60 && (!isset($_POST) || count($_POST)==0)) {
     $wasLTI = isset($_SESSION['ltiitemtype']);
-    unset($_SESSION['userid']);
     unset($userid);
     $_SESSION = array();
-		if (isset($_COOKIE[session_name()])) {
-			setcookie(session_name(), '', time()-42000, '/', null, false, true);
-		}
-		session_destroy();
     if ($wasLTI) {
       require('header.php');
       echo _('Your session has expired. Please go back to your LMS and open this assignment again.');
@@ -270,15 +265,17 @@
 			 $querys = (!empty($addtoquerystring) ? '?' . Sanitize::fullQueryString($addtoquerystring) : '');
 		 }
 
-		 $needToForcePasswordReset = false;
-		 if (isset($CFG['acct']['passwordMinlength']) && strlen($_POST['password'])<$CFG['acct']['passwordMinlength']) {
-		 	 $needToForcePasswordReset = true;
-		 } else if (isset($CFG['acct']['passwordFormat'])) {
-		 	 require_once("includes/newusercommon.php");
-		 	 if (!checkFormatAgainstRegex($_POST['password'], $CFG['acct']['passwordFormat'])) {
-		 	 	 $needToForcePasswordReset = true;
-		 	 }
-		 }
+         $needToForcePasswordReset = false;
+         if ($_POST['username']!='guest') {
+            if (isset($CFG['acct']['passwordMinlength']) && strlen($_POST['password'])<$CFG['acct']['passwordMinlength']) {
+                $needToForcePasswordReset = true;
+            } else if (isset($CFG['acct']['passwordFormat'])) {
+                require_once("includes/newusercommon.php");
+                if (!checkFormatAgainstRegex($_POST['password'], $CFG['acct']['passwordFormat'])) {
+                    $needToForcePasswordReset = true;
+                }
+            }
+         }
 		 // checks if the array $querys is empty
 		 if (!empty($querys)){
 		     $rqp = "&r=" .Sanitize::randomQueryStringParam();
@@ -677,8 +674,10 @@
 					$instrPreviewId = $userid;
 				}
 			}
-		}
-	}
+        }
+	} else if ($_GET['cid']=="admin") {
+        $courseUIver = 2;
+    }
 	$verified = true;
 
  }

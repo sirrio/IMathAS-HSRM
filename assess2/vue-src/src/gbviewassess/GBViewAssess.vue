@@ -115,10 +115,11 @@
         </ul>
       </div>
 
-      <div v-if="canEdit && aData.has_active_attempt">
-        <a :href="viewAsStuUrl">
+      <div v-if="canEdit">
+        <a v-if="aData.has_active_attempt" :href="viewAsStuUrl">
           {{ $t('gradebook.view_as_stu') }}
-        </a> |
+        </a>
+        <span v-if="aData.has_active_attempt">|</span>
         <a :href="viewAsStuUrl + '#/print'">
           {{ $t('gradebook.print') }}
         </a>
@@ -234,6 +235,11 @@
                 @click = "showAllWork = !showAllWork"
               >
                 {{ $t('gradebook.show_all_work') }}
+              </button>
+              <button
+                @click = "previewFiles"
+              >
+                {{ $t('gradebook.preview_files') }}
               </button>
             </p>
           </div>
@@ -685,7 +691,11 @@ export default {
     },
     closeConfirm () {
       store.confirmObj = null;
+    },
+    previewFiles () {
+      window.previewallfiles();
     }
+
   },
   created () {
     window.$(window).on('beforeunload', this.beforeUnload);

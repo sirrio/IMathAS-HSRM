@@ -22,7 +22,7 @@ if (empty($_SESSION['tzoffset']) && !empty($CFG['static_server'])) {
     echo '<script src="'.$CFG['static_server'].'/javascript/staticcheck.js"></script>';
 }
 ?>
-<link rel="stylesheet" href="<?php echo $staticroot . "/imascore.css?ver=111120";?>" type="text/css" />
+<link rel="stylesheet" href="<?php echo $staticroot . "/imascore.css?ver=010821";?>" type="text/css" />
 <?php
 if (isset($coursetheme)) {
 	if (isset($flexwidth) || isset($usefullwidth)) {
@@ -70,7 +70,7 @@ div.breadcrumb { display:none;}
 var imasroot = '<?php echo $imasroot; ?>'; var cid = <?php echo (isset($cid) && is_numeric($cid))?$cid:0; ?>;
 var staticroot = '<?php echo $staticroot; ?>';
 </script>
-<script type="text/javascript" src="<?php echo $staticroot;?>/javascript/general.js?v=111120"></script>
+<script type="text/javascript" src="<?php echo $staticroot;?>/javascript/general.js?v=121520"></script>
 <?php
 //$_SESSION['mathdisp'] = 3;
 //
@@ -175,7 +175,7 @@ if (!isset($_SESSION['mathdisp'])) {
 }
 echo "<script src=\"$staticroot/javascript/mathjs.js?ver=052016\" type=\"text/javascript\"></script>\n";
 if (isset($_SESSION['graphdisp']) && $_SESSION['graphdisp']==1) {
-	echo "<script src=\"$staticroot/javascript/ASCIIsvg_min.js?ver=070920\" type=\"text/javascript\"></script>\n";
+	echo "<script src=\"$staticroot/javascript/ASCIIsvg_min.js?ver=121420\" type=\"text/javascript\"></script>\n";
 	echo "<script type=\"text/javascript\">var usingASCIISvg = true;</script>";
 	//echo "<script src=\"$imasroot/course/editor/plugins/AsciiSvg/ASCIIsvgAddon.js\" type=\"text/javascript\"></script>\n";
 } else if (isset($_SESSION['graphdisp'])) {
@@ -184,7 +184,7 @@ if (isset($_SESSION['graphdisp']) && $_SESSION['graphdisp']==1) {
 
 
 if (isset($useeditor) && $_SESSION['useed']==1) {
-    echo '<script type="text/javascript" src="'.$staticroot.'/tinymce4/tinymce_bundled.min.js?v=082520"></script>';
+    echo '<script type="text/javascript" src="'.$staticroot.'/tinymce4/tinymce_bundled.min.js?v=120720"></script>';
     //echo '<script type="text/javascript" src="'.$imasroot.'/tinymce4/tinymce.js?v=051919"></script>';
 
 	echo "\n";

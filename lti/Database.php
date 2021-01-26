@@ -115,7 +115,7 @@ class Imathas_LTI_Database implements LTI\Database
      * @param  string           $client_id
      * @return LTI_Registration
      */
-    public function find_registration_by_issuer(string $iss, ?string $client_id): LTI\LTI_Registration
+    public function find_registration_by_issuer(string $iss, ?string $client_id): ?LTI\LTI_Registration
     {
         if (empty($client_id)) {
             if (isset($_GET['u'])) {
@@ -134,7 +134,7 @@ class Imathas_LTI_Database implements LTI\Database
         }
         $row = $stm->fetch(PDO::FETCH_ASSOC);
         if ($row === false || $row === null) {
-            return false;
+            return null;
         }
         return LTI\LTI_Registration::new ()
             ->set_auth_login_url($row['auth_login_url'])
@@ -381,8 +381,12 @@ class Imathas_LTI_Database implements LTI\Database
             $stm->execute(array($userid, $localcourse->get_courseid()));
             $row = $stm->fetch(PDO::FETCH_ASSOC);
             if ($row === false || $row === null) {
-                $stm = $this->dbh->prepare('INSERT INTO imas_students (userid,courseid,section,lticourseid) VALUES (?,?,?,?)');
-                $stm->execute(array($userid, $localcourse->get_courseid(), $section, $localcourse->get_id()));
+                $stm = $this->dbh->prepare("SELECT deflatepass FROM imas_courses WHERE id=:id");
+                $stm->execute(array(':id'=>$localcourse->get_courseid()));
+                $deflatepass = $stm->fetchColumn(0);
+
+                $stm = $this->dbh->prepare('INSERT INTO imas_students (userid,courseid,section,latepass,lticourseid) VALUES (?,?,?,?,?)');
+                $stm->execute(array($userid, $localcourse->get_courseid(), $section, $deflatepass, $localcourse->get_id()));
             } else if ($row['lticourseid'] !== $localcourse->get_id()) {
                 $stm = $this->dbh->prepare('UPDATE imas_students SET lticourseid=? WHERE id=?');
                 $stm->execute(array($localcourse->get_id(), $row['id']));
@@ -1127,6 +1131,10 @@ class Imathas_LTI_Database implements LTI\Database
             $section = $data['context']['label'];
         }
 
+        $stm = $this->dbh->prepare("SELECT deflatepass FROM imas_courses WHERE id=:id");
+        $stm->execute(array(':id'=>$localcourse->get_courseid()));
+        $deflatepass = $stm->fetchColumn(0);
+
         $query = 'SELECT iu.FirstName,iu.LastName,ilu.ltiuserid,istu.id FROM
             imas_users AS iu JOIN imas_ltiusers AS ilu ON ilu.userid=iu.id AND ilu.org=?
             JOIN imas_students AS istu ON istu.userid=iu.id WHERE istu.courseid=?';
@@ -1173,8 +1181,8 @@ class Imathas_LTI_Database implements LTI\Database
                     }
                 }
                 // enroll in course
-                $stm = $this->dbh->prepare('INSERT INTO imas_students (userid,courseid,section,lticourseid) VALUES (?,?,?,?)');
-                $stm->execute(array($localuserid, $localcourse->get_courseid(), $section, $localcourse->get_id()));
+                $stm = $this->dbh->prepare('INSERT INTO imas_students (userid,courseid,section,latepass,lticourseid) VALUES (?,?,?,?,?)');
+                $stm->execute(array($localuserid, $localcourse->get_courseid(), $section, $deflatepass, $localcourse->get_id()));
 
                 $enrollcnt++;
             } else {
