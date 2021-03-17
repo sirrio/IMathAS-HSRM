@@ -179,6 +179,7 @@ class QuestionHtmlGenerator
         }
 
         // Use this question's RNG seed.
+        $currentseed = $this->questionParams->getQuestionSeed();
         $this->randWrapper->srand($this->questionParams->getQuestionSeed());
 
         // Eval the question writer's question code.
@@ -898,6 +899,9 @@ class QuestionHtmlGenerator
                     $allcorrect = true;
                     $showfor = array_map('intval', $hintpart[$lastkey][1]);
                     foreach ($showfor as $subpn) {
+                        if (!isset($partattemptn[$subpn])) {
+                            $partattemptn[$subpn] = 0;
+                        }
                         if (isset($scoreiscorrect) && $scoreiscorrect[$thisq][$subpn] == 1) {
                            continue; // don't consider correct
                         } else {
@@ -918,6 +922,9 @@ class QuestionHtmlGenerator
                 } else {
                     if (isset($scoreiscorrect) && $scoreiscorrect[$thisq][$iidx] == 1) {
                         continue;
+                    }
+                    if (!isset($partattemptn[$iidx])) {
+                        $partattemptn[$iidx] = 0;
                     }
                     if ($partattemptn[$iidx] > $lastkey) {
                         $usenum = $lastkey;

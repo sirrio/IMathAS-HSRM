@@ -3,9 +3,9 @@
 //(c) 2006 David Lippman
 
 require_once(__DIR__ . '/../includes/Rand.php');
-$RND = new Rand();
+$GLOBALS['RND'] = new Rand();
 
-array_push($allowedmacros,"exp","sec","csc","cot","sech","csch","coth","nthlog",
+array_push($GLOBALS['allowedmacros'],"exp","sec","csc","cot","sech","csch","coth","nthlog",
  "sinn","cosn","tann","secn","cscn","cotn","rand","rrand","rands","rrands",
  "randfrom","randsfrom","jointrandfrom","diffrandsfrom","nonzerorand",
  "nonzerorrand","nonzerorands","nonzerorrands","diffrands","diffrrands",
@@ -35,7 +35,8 @@ array_push($allowedmacros,"exp","sec","csc","cot","sech","csch","coth","nthlog",
  "getopendotsdata","gettwopointdata","getlinesdata","getineqdata","adddrawcommand",
  "mergeplots","array_unique","ABarray","scoremultiorder","scorestring","randstate",
  "randstates","prettysmallnumber","makeprettynegative","rawurlencode","fractowords",
- "randcountry","randcountries","sorttwopointdata","addimageborder");
+ "randcountry","randcountries","sorttwopointdata","addimageborder","formatcomplex",
+ "array_values");
 
 function mergearrays() {
 	$args = func_get_args();
@@ -384,14 +385,14 @@ function showplot($funcs) { //optional arguments:  $xmin,$xmax,$ymin,$ymax,label
 		}
 		$avoid = array();
 		$domainlimited = false;
-		if (isset($function[2]) && $function[2]!='' && is_numeric($function[2])) {
-			$xmin = $function[2];
+		if (isset($function[2]) && $function[2]!='') {
+			$xmin = evalbasic($function[2]);
 			$domainlimited = true;
 		} else {$xmin = $winxmin;}
 		if (isset($function[3]) && $function[3]!='') {
 			$xmaxarr = explode('!',$function[3]);
-			if (is_numeric($xmaxarr[0])) {
-				$xmax = $xmaxarr[0];
+			if ($xmaxarr[0] != '') {
+				$xmax = evalbasic($xmaxarr[0]);
 			} else {
 				$xmax = $winxmax;
 			}
@@ -708,7 +709,10 @@ function addlabel($plot,$x,$y,$lbl) {
 	}
 	if ($_SESSION['graphdisp']==0) {
 		return $plot .= "Label &quot;$lbl&quot; at ($x,$y). ";
-	}
+    }
+    $lbl = str_replace("'",'&apos;',$lbl);
+    $lbl = str_replace('"','\\"',$lbl);
+
 	if (func_num_args()>6) {
 		$loc = func_get_arg(5);
 		$angle = func_get_arg(6);
@@ -729,7 +733,9 @@ function addlabelabs($plot,$x,$y,$lbl) {
 	}
 	if ($_SESSION['graphdisp']==0) {
 		return $plot .= "Label &quot;$lbl&quot; at pixel coordinates ($x,$y).";
-	}
+    }
+    $lbl = str_replace("'",'&apos;',$lbl);
+    $lbl = str_replace('"','\\"',$lbl);
 	if (func_num_args()>6) {
 		$loc = func_get_arg(5);
 		$angle = func_get_arg(6);
@@ -848,7 +854,9 @@ function showasciisvg($script, $width=200, $height=200, $alt="") {
     }
     $script = str_replace("'",'"',$script);
     $out = "<embed type='image/svg+xml' align='middle' width='$width' height='$height' script='$script' />";
-    $out .= '<span class="sr-only">'.$alt.'</span>';
+    if (empty($GLOBALS['hide-sronly'])) {
+        $out .= '<span class="sr-only">'.$alt.'</span>';
+    }
     return $out;
 }
 
@@ -1541,12 +1549,12 @@ function diffrrands($min,$max,$p=0,$n=0,$ord='def',$nonzero=false) {
 }
 
 
-function nonzerodiffrands($min,$max,$n=0,$ord='def') {
+function nonzerodiffrands($min,$max,$n=0,$ord='def',$nowarn=false) {
 	if (func_num_args()<3) { echo "nonzerodiffrands expects 3 arguments"; return $min;}
 	list($min,$max) = checkMinMax($min, $max, true, 'nonzerodiffrands');
 	if ($max == $min) {echo "nonzerodiffrands: Need min&lt;max"; return array_fill(0,$n,$min);}
 	if ($n > $max-$min+1 || ($min*$max<=0 && $n>$max-$min)) {
-		if ($GLOBALS['myrights']>10) {
+		if ($GLOBALS['myrights']>10 && !$nowarn) {
 			echo "nonzerodiffrands: min-max not far enough for n requested";
 		}
 	}
@@ -2841,7 +2849,8 @@ function makenumberrequiretimes($arr) {
 
 function evalbasic($str) {
 	global $myrights;
-	$str = str_replace(',','',$str);
+    $str = str_replace(',','',$str);
+    $str = preg_replace('/(\d)pi/', '$1*pi', $str);
 	$str = str_replace('pi','3.141592653',$str);
 	$str = clean($str);
 	if (is_numeric($str)) {
@@ -3010,7 +3019,7 @@ function intervaltoineq($str,$var) {
 
 function cleanbytoken($str,$funcs = array()) {
 	if (is_array($str)) { return $str;} //avoid errors by just skipping this if called with an array somehow
-	$str = str_replace('`', '', $str);
+	$str = str_replace(['`','\\'], '', $str);
 	$instr = 0;
 	$primeoff = 0;
 	while (($p = strpos($str, "'", $primeoff))!==false) {
@@ -3089,6 +3098,7 @@ function cleanbytoken($str,$funcs = array()) {
                     }
                     if ($lastout>-1) {
                         array_pop($out);
+                        $lastout--;
                     }
 
                 }
@@ -3164,6 +3174,7 @@ function cleanbytoken($str,$funcs = array()) {
     if ($out[0]=='+') {
         array_shift($out);
     }
+
     if (count($out)==0 && $lastout == -1) {
         $finalout[] = '0';
     } else {
@@ -3227,7 +3238,7 @@ function cleantokenize($str,$funcs) {
 				$intype = 3;
 			} else if ($out=='pi') {
 				$intype = 3;
-			} else if ($out=='gt' || $out=='lt' || $out=='ge' || $out=='le' || $out=='ne' || $out=='or') {
+			} else if ($out=='gt' || $out=='lt' || $out=='ge' || $out=='le' || $out=='geq' || $out=='leq' || $out=='ne' || $out=='or') {
                 $intype = 12; // separator
             } else {
 				//eat whitespace
@@ -4055,9 +4066,11 @@ function gettwopointdata($str,$type,$xmin=null,$xmax=null,$ymin=null,$ymax=null,
 		$code = 8.3;
 	} else if ($type=='log') {
 		$code = 8.4;
-	} else if ($type=='circle') {
+	} else if ($type=='circle' || $type=='circlerad') {
 		$code = 7;
-	} else if ($type=='sin') {
+	} else if ($type=='ellipse' || $type=='ellipserad') {
+    $code = 7.2;
+  } else if ($type=='sin') {
 		$code = 9.1;
 	} else if ($type=='cos') {
 		$code = 9;
@@ -4080,6 +4093,13 @@ function gettwopointdata($str,$type,$xmin=null,$xmax=null,$ymin=null,$ymax=null,
 			$pts[3] = ($pts[3] - $imgborder)/$pixelsperx + $xmin;
 			$pts[2] = ($h - $pts[2] - $imgborder)/$pixelspery + $ymin;
 			$pts[4] = ($h - $pts[4] - $imgborder)/$pixelspery + $ymin;
+      if ($type=='ellipserad') {
+        $pts[3] = abs($pts[3]-$pts[1]);
+        $pts[4] = abs($pts[4]-$pts[2]);
+      } else if ($type=='circlerad') {
+        $pts[3] = sqrt(pow($pts[3]-$pts[1],2)+pow($pts[4]-$pts[2],2));
+        unset($pts[4]);
+      }
 			$outpts[] = array($pts[1], $pts[2], $pts[3], $pts[4]);
 		}
 	}
@@ -4390,7 +4410,7 @@ function scoremultiorder($stua, $answer, $swap, $type='string', $weights=null) {
 			$loc = -1;
 			//for ($k=0;$k<count($sw);$k++) {
             for ($k=count($sw)-1;$k>=0;$k--) {
-				if ($type=='string' && trim(strtolower($tofind))==trim(strtolower($newans[$sw[$k][0]]))) {
+				if ($type=='string' && preg_replace('/\s+/','',strtolower($tofind))==preg_replace('/\s+/','',strtolower($newans[$sw[$k][0]]))) {
 					$loc = $k; break;
 				} else if ($type=='number' && abs($tofind - $newans[$sw[$k][0]])<0.01) {
 					$loc = $k; break;
@@ -4641,6 +4661,22 @@ function decryptval($val, $key) {
 	$cipher = "AES128";
 	list($iv,$val) = explode('.', $val);
 	return json_decode(openssl_decrypt($val, $cipher, $key, 0, base64_decode($iv)), true);
+}
+
+function formatcomplex($real,$imag) {
+    if ($imag == 0) {
+        return $real;
+    } else {
+        if ($imag == 1) {
+            return ($real==0) ? 'i' : "$real+i";
+        } else if ($imag == -1) {
+            return ($real==0) ? '-i' : "$real-i";
+        } else if ($imag < 0) {
+            return "$real{$imag}i";
+        } else {
+            return "$real+{$imag}i";
+        }
+    }
 }
 
 ?>

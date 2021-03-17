@@ -152,7 +152,10 @@ function init(paramarr, enableMQ, baseel) {
           showSyntaxCheckMQ(qn);
         }
         //document.getElementById("pbtn"+qn).style.display = 'none';
-      } //TODO: when matrix, clear preview on further input
+      }  //TODO: when matrix, clear preview on further input
+    } else if (params.matrixsize) {
+        $("input[id^=qn"+qn+"-]").on('input', (function(thisqn) { 
+          return function () {syntaxCheckMQ(thisqn) }; })(qn));
     } else if (document.getElementById("qn"+qn)) {
         document.getElementById("qn"+qn).addEventListener('keyup', (function(thisqn) { 
             return function () {syntaxCheckMQ(thisqn) }; })(qn));
@@ -606,7 +609,7 @@ function initcreditboxes() {
 
 var LivePreviews = [];
 function setupLivePreview(qn, skipinitial) {
-    if (mathRenderer=="MathJax" && !window.MathJax) {
+    if (mathRenderer=="MathJax" && (!window.MathJax || (!window.MathJax.Hub && !window.MathJax.typesetPromise))) {
         var thisqn = qn; var thisskipinitial = skipinitial;
         setTimeout(100, function() { setupLivePreview(thisqn, thisskipinitial)});
         return;
@@ -623,7 +626,8 @@ function setupLivePreview(qn, skipinitial) {
 			  finaltimeout: null,  // setTimeout id for clicking preview
 			  mjRunning: false,  // true when MathJax is processing
 			  mjPending: false,  // true when a typeset has been queued
-			  oldText: null,     // used to check if an update is needed
+              oldText: null,     // used to check if an update is needed
+              mjPromise: null,
 
 			  //
 			  //  Get the preview and buffer DIV's
@@ -634,9 +638,12 @@ function setupLivePreview(qn, skipinitial) {
   					.append('<span id="lpbuf2'+qn+'" style="visibility:hidden;position:absolute;"></span>');
   				this.preview = document.getElementById("lpbuf1"+qn);
   				this.buffer = document.getElementById("lpbuf2"+qn);
-          if (!skipinitial) {
-            showPreview(qn);  //TODO: review this
-          }
+                if (mathRenderer=="MathJax" && MathJax.typesetPromise) {
+                    this.mjPromise = Promise.resolve();
+                }
+                if (!skipinitial) {
+                    showPreview(qn);  //TODO: review this
+                }
 			  },
 
 			  SwapBuffers: function () {
@@ -661,13 +668,20 @@ function setupLivePreview(qn, skipinitial) {
 			  },
 			  RenderBuffer: function() {
 			      if (mathRenderer=="MathJax") {
-				      MathJax.Hub.Queue(
-					      ["Typeset",MathJax.Hub,this.buffer],
-					      ["PreviewDone",this]
-				      );
+                      if (MathJax.typesetPromise) {
+                        this.mjPromise = this.mjPromise.then(function () {
+                            //MathJax.typesetClear([this.buffer]);
+                            MathJax.typesetPromise([this.buffer]).then(this.PreviewDone.bind(this));
+                        }.bind(this));
+                      } else {
+                        MathJax.Hub.Queue(
+                            ["Typeset",MathJax.Hub,this.buffer],
+                            ["PreviewDone",this]
+                        );
+                      }
 			      } else if (mathRenderer=="Katex") {
-			      	      renderMathInElement(this.buffer);
-				      if (typeof MathJax != "undefined" && MathJax.version && $(this.buffer).children(".mj").length>0) {//has MathJax elements
+			      	  renderMathInElement(this.buffer);
+				      if (typeof MathJax != "undefined" && MathJax.Hub && !MathJax.typesetPromise && $(this.buffer).children(".mj").length>0) {//has MathJax elements
 					      MathJax.Hub.Queue(["PreviewDone",this]);
 				      } else {
 					      this.PreviewDone();
@@ -676,13 +690,13 @@ function setupLivePreview(qn, skipinitial) {
 			  },
 
 			  DoFinalPreview: function() {
-          $("#pbtn"+qn).trigger("click");
+                $("#pbtn"+qn).trigger("click");
 			  },
 
 			  preformat: function(text) {
-          var qtype = allParams[qn].qtype;
-          var calcformat = allParams[qn].calcformat;
-          return preformat(qn, text, qtype, calcformat);
+                var qtype = allParams[qn].qtype;
+                var calcformat = allParams[qn].calcformat;
+                return preformat(qn, text, qtype, calcformat);
 			  },
 
 			  CreatePreview: function () {
@@ -691,8 +705,12 @@ function setupLivePreview(qn, skipinitial) {
 			    var text = document.getElementById("qn"+qn).value;
 			    if (text === this.oldtext) return;
 			    if (this.mjRunning) {
-			      this.mjPending = true;
-			      MathJax.Hub.Queue(["CreatePreview",this]);
+                  this.mjPending = true;
+                  if (this.mjPromise) {
+                    this.mjPromise = this.mjPromise.then(this.CreatePreview().bind(this));
+                  } else if (MathJax.Hub) {
+                    MathJax.Hub.Queue(["CreatePreview",this]);
+                  }
 			    } else {
 			      this.oldtext = text;
 			      this.buffer.innerHTML = "`"+this.preformat(text)+"`";
@@ -708,13 +726,13 @@ function setupLivePreview(qn, skipinitial) {
 			    updateehpos();
 			  }
 
-			};
-			if (typeof MathJax != "undefined") {
-				LivePreviews[qn].callback = MathJax.Callback(["CreatePreview",LivePreviews[qn]]);
+            };
+            if (typeof MathJax != "undefined" && !MathJax.typesetPromise) {
+                LivePreviews[qn].callback = MathJax.Callback(["CreatePreview",LivePreviews[qn]]);
 				LivePreviews[qn].callback.autoReset = true;  // make sure it can run more than once
-			} else {
-				LivePreviews[qn].callback = function() { LivePreviews[qn].CreatePreview(); };
-			}
+            } else {
+                LivePreviews[qn].callback = function() { LivePreviews[qn].CreatePreview(); };
+            }
 			LivePreviews[qn].Init(skipinitial);
 		} else {
 			LivePreviews[qn] = {
@@ -762,7 +780,7 @@ function normalizemathunicode(str) {
 	str = str.replace(/⁰/g,"^0").replace(/¹/g,"^1").replace(/²/g,"^2").replace(/³/g,"^3").replace(/⁴/g,"^4").replace(/⁵/g,"^5").replace(/⁶/g,"^6").replace(/⁷/g,"^7").replace(/⁸/g,"^8").replace(/⁹/g,"^9");
 	str = str.replace(/\u2329/g, "<").replace(/\u232a/g, ">");
 	str = str.replace(/₀/g,"_0").replace(/₁/g,"_1").replace(/₂/g,"_2").replace(/₃/g,"_3");
-	str = str.replace(/\bOO\b/gi,"oo").replace(/°/g,'degree');
+	str = str.replace(/\b(OO|infty)\b/gi,"oo").replace(/°/g,'degree');
 	str = str.replace(/θ/g,"theta").replace(/ϕ/g,"phi").replace(/φ/g,"phi").replace(/π/g,"pi").replace(/σ/g,"sigma").replace(/μ/g,"mu")
 	str = str.replace(/α/g,"alpha").replace(/β/g,"beta").replace(/γ/g,"gamma").replace(/δ/g,"delta").replace(/ε/g,"epsilon").replace(/κ/g,"kappa");
 	str = str.replace(/λ/g,"lambda").replace(/ρ/g,"rho").replace(/τ/g,"tau").replace(/χ/g,"chi").replace(/ω/g,"omega");
@@ -823,7 +841,7 @@ var MQsyntaxtimer = null;
  */
 function syntaxCheckMQ(id, str) {
   clearTimeout(MQsyntaxtimer);
-  var qn = parseInt(id.replace(/\D/g,''));
+  var qn = parseInt(id.replace(/.*qn(\d+)\b.*/g,'$1'));
   MQsyntaxtimer = setTimeout(function() { showSyntaxCheckMQ(qn);}, 1000);
 }
 
@@ -844,9 +862,15 @@ function showSyntaxCheckMQ(qn) {
     previewel.style.position = '';
   } else {
     var previewel = document.getElementById('p'+qn);
-    previewel.innerHTML = outstr;
+    if (previewel) {
+        previewel.innerHTML = outstr;
+    }
   }
-  a11ypreview('`'+htmlEntities(document.getElementById("qn"+qn).value)+'` ' + outstr);
+  if (document.getElementById("qn"+qn)) {
+    a11ypreview('`'+htmlEntities(document.getElementById("qn"+qn).value)+'` ' + outstr);
+  } else {
+    a11ypreview(outstr);
+  }
 }
 
 /**
@@ -1150,11 +1174,11 @@ function processNumber(origstr, format) {
         str = strs[j];
         if (format.indexOf('units')!=-1) {
             var unitformat = _('Units must be given as [decimal number]*[unit]^[power]*[unit]^[power].../[unit]^[power]*[unit]^[power]...');
-            if (!str.match(/^\s*(\d+\.?\d*|\.\d+|\d\.?\d*\s*(E|\*\s*10\s*\^)\s*[\-\+]?\d+)/)) {
+            if (!str.match(/^\s*(-?\s*\d+\.?\d*|-?\s*\.\d+|-?\s*\d\.?\d*\s*(E|\*\s*10\s*\^)\s*[\-\+]?\d+)/)) {
                 err += _('Answer must start with a number. ');
             }
             // strip number
-            str = str.replace(/^\s*(\d\.?\d*\s*(E|\*\s*10\s*\^)\s*[\-\+]?\d+|\d+\.?\d*|\.\d+)\s*[\-\*]?\s*/,'');
+            str = str.replace(/^\s*(-?\s*\d\.?\d*\s*(E|\*\s*10\s*\^)\s*[\-\+]?\d+|-?\s*\d+\.?\d*|-?\s*\.\d+)\s*[\-\*]?\s*/,'');
             str = str.replace(/\s*\-\s*([a-zA-Z])/g,'*$1');
             str = str.replace(/\*\*/g,'^');
             str = str.replace(/\s*(\/|\^|\-)\s*/g,'$1');
@@ -1187,7 +1211,7 @@ function processNumber(origstr, format) {
                 err += _('This is not an integer.');
             }
         } else {
-            if (!str.match(/^\s*\-?(\d+\.?\d*|\.\d+|\d\.?\d*\s*E\s*[\-\+]?\d+)\s*$/)) {
+            if (!str.match(/^\s*\-?(\d+\.?\d*|\.\d+|\d*\.?\d*\s*E\s*[\-\+]?\d+)\s*$/)) {
                 err += _('This is not a decimal or integer value.');
             }
         }
@@ -1445,8 +1469,10 @@ function processSizedMatrix(qn) {
     for (var col=0; col<size[1]; col++) {
       str = document.getElementById('qn' + qn + '-' + count).value;
       str = normalizemathunicode(str);
-      err += syntaxcheckexpr(str,format);
-      err += singlevalsyntaxcheck(str,format);
+      if (str !== '') {
+        err += syntaxcheckexpr(str,format);
+        err += singlevalsyntaxcheck(str,format);
+      }
       out[row][col] = str;
       res = singlevaleval(str, format);
       err += res[1];
@@ -2248,8 +2274,8 @@ function AutoSuggest(elem, suggestions)
 		/********************************************************
 		mouseover handler for the dropdown ul
 		move the highlighted suggestion with the mouse
-		********************************************************/
-		ul.onmouseover = function(ev)
+        ********************************************************/
+        this.setHighlight = function(ev)
 		{
 			//Walk up from target until you find the LI.
 			var target = me.getEventSource(ev);
@@ -2271,7 +2297,8 @@ function AutoSuggest(elem, suggestions)
 				}
 			}
 			me.changeHighlight();
-		};
+        };
+        ul.onmouseover = me.setHighlight;
 
 		/********************************************************
 		click handler for the dropdown ul
@@ -2280,6 +2307,7 @@ function AutoSuggest(elem, suggestions)
         
 		ul.onmousedown = ul.ontouchstart = function(ev)
 		{
+            me.setHighlight(ev);
 			me.useSuggestion("click");
 			me.hideDiv();
 			me.cancelEvent(ev);

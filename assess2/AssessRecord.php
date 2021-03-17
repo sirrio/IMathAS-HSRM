@@ -613,9 +613,7 @@ class AssessRecord
     if ($this->is_practice) {
       if ($active) {
         $this->assessRecord['status'] |= 16;
-      } else {
-        $this->assessRecord['status'] = $this->assessRecord['status'] & ~16;
-      }
+      } 
       if ($setattempt) {
         $this->parseData();
         $lastver = count($this->data['assess_versions']) - 1;
@@ -1469,6 +1467,7 @@ class AssessRecord
           $showans === 'after_take' || $ansInGb === 'after_take')
         ) ||
         ($ansInGb == 'after_due'
+          && !$this->is_practice
           && time() > $this->assess_info->getSetting('enddate')
           && !$this->assess_info->getSetting('can_use_latepass')
         ) ||
@@ -3484,6 +3483,7 @@ class AssessRecord
         $outOfAttempts = true;
       }
       $hasSubmitted = false;
+      $hasUnSubmitted = false;
       for ($av=0; $av < count($this->data['assess_versions']); $av++) {
         if (!empty($this->data['assess_versions'][$av]['timelimit_end'])) {
           if ($this->data['assess_versions'][$av]['lastchange'] >
@@ -3494,12 +3494,19 @@ class AssessRecord
         }
         if ($this->data['assess_versions'][$av]['status'] == 1) {
           $hasSubmitted = true;
+        } else if ($this->data['assess_versions'][$av]['status'] == 0) {
+          $hasUnSubmitted = true;
         }
       }
       if ($hasSubmitted) {
         $this->assessRecord['status'] |= 64;
       } else {
         $this->assessRecord['status'] = $this->assessRecord['status'] & ~64;
+      }
+      if ($hasUnSubmitted) {
+        $this->assessRecord['status'] |= 1;
+      } else {
+        $this->assessRecord['status'] = $this->assessRecord['status'] & ~1;
       }
     }
     if ($outOfAttempts) {
@@ -3766,6 +3773,16 @@ class AssessRecord
       }
     }
     return $out;
+  }
+
+  /**
+   * Clears any Latepass blocks (review or gb) for current student
+   */
+  public function clearLPblocks() {
+    $query = "UPDATE imas_content_track SET type=IF(type = 'assessreview', 'assessreviewub', 'gbviewsafe')
+        WHERE typeid=:typeid AND userid=:userid AND (type='gbviewasid' OR type='gbviewassess' OR type='assessreview')";
+    $stm = $this->DBH->prepare($query);
+    $stm->execute([':typeid' => $this->curAid, ':userid' => $this->curUid]);
   }
 
   /**
