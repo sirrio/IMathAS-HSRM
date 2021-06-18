@@ -138,7 +138,12 @@ if (isset($_GET['launch'])) {
 	}
 	if (isset($_POST['tzname'])) {
 		$_SESSION['logintzname'] = $_POST['tzname'];
-	}
+    }
+    if ($_POST['orig_linkid'] != $_SESSION['lti_resource_link_id']) {
+        echo _('Uh oh, something went wrong.  Please go back and try again').'. ';
+        echo _('You may have launched too many assignments too quickly.');
+		exit;
+    }
 
 	require_once("$curdir/includes/userprefs.php");
 	generateuserprefs();
@@ -202,7 +207,7 @@ if (isset($_GET['launch'])) {
 	$placeinhead = "<script type=\"text/javascript\" src=\"$staticroot/javascript/jstz_min.js\" ></script>";
 	require("header.php");
 	echo "<h3>Connecting to $installname</h3>";
-	echo "<form id=\"postbackform\" method=\"post\" action=\"" . $imasroot . "/bltilaunch.php?launch=true\" ";
+    echo "<form id=\"postbackform\" method=\"post\" action=\"" . $imasroot . "/bltilaunch.php?launch=true\" ";
 	if ($_SESSION['ltiitemtype']==0 && $_SESSION['ltitlwrds'] != '') {
 		echo "onsubmit='return confirm(\"This assessment has a time limit of "
             .Sanitize::encodeStringForJavascript($_SESSION['ltitlwrds'])
@@ -216,7 +221,8 @@ if (isset($_GET['launch'])) {
 
 	} else {
 		echo ">";
-	}
+    }
+    echo '<input type=hidden name="orig_linkid" value="'. Sanitize::encodeStringForDisplay($_SESSION['lti_resource_link_id']) . '"/>';
 	?>
 	<div id="settings"><noscript>JavaScript is not enabled.  JavaScript is required for <?php echo $installname; ?>.
 	Please enable JavaScript and reload this page</noscript></div>
@@ -274,16 +280,33 @@ if (isset($_GET['launch'])) {
 		} else {
 			if (!empty($_POST['curSID']) && !empty($_POST['curPW'])) {
 				//provided current SID/PW pair
-				$stm = $DBH->prepare('SELECT password,id FROM imas_users WHERE SID=:sid');
+				$stm = $DBH->prepare('SELECT password,id,mfa FROM imas_users WHERE SID=:sid');
 				$stm->execute(array(':sid'=>$_POST['curSID']));
 				//if (mysql_num_rows($result)==0) {
 				if ($stm->rowCount()==0) {
 					$infoerr = 'Username (key) is not valid';
 				} else {
-					list($realpw,$tmpuserid) = $stm->fetch(PDO::FETCH_NUM); //DB mysql_result($result,0,0);
+					list($realpw,$tmpuserid,$mfadata) = $stm->fetch(PDO::FETCH_NUM); //DB mysql_result($result,0,0);
 					if (((!isset($CFG['GEN']['newpasswords']) || $CFG['GEN']['newpasswords']!='only') && ($realpw == md5($_POST['curPW'])))
 					  || (isset($CFG['GEN']['newpasswords']) && password_verify($_POST['curPW'],$realpw)) ) {
-						$userid= $tmpuserid; //DB mysql_result($result,0,1);
+                        if ($mfadata != '') {
+                            $mfadata = json_decode($mfadata, true);
+                            if (empty($mfadata['mfatype']) || $mfadata['mfatype'] == 'all') {
+                                $flexwidth = true;
+                                $nologo = true;
+                                require_once(__DIR__.'/includes/mfa.php');
+                                $formaction = $imasroot."/bltilaunch.php?userinfo=set";
+                                if (!isset($_POST['mfatoken'])) {
+                                    mfa_showLoginEntryForm($formaction, '', false);
+                                    exit;
+                                } else if (mfa_verify($mfadata, $formaction, $tmpuserid, false)) {
+                                    // good to go
+                                } else {
+                                    $infoerr = "MFA verification failed";
+                                }
+                            }
+                        }
+                        $userid= $tmpuserid;
 					} else {
 						$infoerr = 'Existing username/password provided are not valid.';
 						unset($tmpuserid);
@@ -1735,7 +1758,12 @@ if (isset($_GET['launch'])) {
 	}
 	if (isset($_POST['tzname'])) {
 		$_SESSION['logintzname'] = $_POST['tzname'];
-	}
+    }
+    if ($_POST['orig_linkid'] != $_SESSION['lti_resource_link_id']) {
+        echo _('Uh oh, something went wrong.  Please go back and try again').'. ';
+        echo _('You may have launched too many assignments too quickly.');
+		exit;
+    }
 
 	require_once("$curdir/includes/userprefs.php");
 	generateuserprefs();
@@ -1810,7 +1838,7 @@ if (isset($_GET['launch'])) {
 	$placeinhead = "<script type=\"text/javascript\" src=\"$staticroot/javascript/jstz_min.js\" ></script>";
 	require("header.php");
 	echo "<h3>Connecting to $installname</h3>";
-	echo "<form id=\"postbackform\" method=\"post\" action=\"".$imasroot."/bltilaunch.php?launch=true\" ";
+    echo "<form id=\"postbackform\" method=\"post\" action=\"".$imasroot."/bltilaunch.php?launch=true\" ";
 	if ($_SESSION['ltiitemtype']==0 && $_SESSION['ltitlwrds'] != '') {
 		echo "onsubmit='return confirm(\"This assessment has a time limit of ".Sanitize::encodeStringForDisplay($_SESSION['ltitlwrds']).".  Click OK to start or continue working on the assessment.\")' >";
 		echo "<p class=noticetext>This assessment has a time limit of ".Sanitize::encodeStringForDisplay($_SESSION['ltitlwrds']).".</p>";
@@ -1821,7 +1849,8 @@ if (isset($_GET['launch'])) {
 		}
 	} else {
 		echo ">";
-	}
+    }
+    echo '<input type=hidden name="orig_linkid" value="'. Sanitize::encodeStringForDisplay($_SESSION['lti_resource_link_id']) . '"/>';
 	?>
 	<div id="settings"><noscript>JavaScript is not enabled.  JavaScript is required for <?php echo $installname; ?>.
 	Please enable JavaScript and reload this page</noscript></div>
@@ -1880,15 +1909,32 @@ if (isset($_GET['launch'])) {
 		} else {
 			if (!empty($_POST['curSID']) && !empty($_POST['curPW'])) {
 				//provided current SID/PW pair
-				$stm = $DBH->prepare("SELECT password,id FROM imas_users WHERE SID=:SID");
+				$stm = $DBH->prepare("SELECT password,id,mfa FROM imas_users WHERE SID=:SID");
 				$stm->execute(array(':SID'=>$_POST['curSID']));
 				if ($stm->rowCount()==0) {
 					$infoerr = 'Username (key) is not valid';
 				} else {
-					list($realpw,$queryuserid) = $stm->fetch(PDO::FETCH_NUM);
+					list($realpw,$queryuserid,$mfadata) = $stm->fetch(PDO::FETCH_NUM);
 					if (((!isset($CFG['GEN']['newpasswords']) || $CFG['GEN']['newpasswords']!='only') && ($realpw == md5($_POST['curPW'])))
 					  || (isset($CFG['GEN']['newpasswords']) && password_verify($_POST['curPW'],$realpw)) ) {
-						$userid = $queryuserid;
+                        $userid = $queryuserid;
+                        if ($mfadata != '') {
+                            $mfadata = json_decode($mfadata, true);
+                            if (empty($mfadata['mfatype']) || $mfadata['mfatype'] == 'all') {
+                                $flexwidth = true;
+                                $nologo = true;
+                                require_once(__DIR__.'/includes/mfa.php');
+                                $formaction = $imasroot."/bltilaunch.php?userinfo=set";
+                                if (!isset($_POST['mfatoken'])) {
+                                    mfa_showLoginEntryForm($formaction, '', false);
+                                    exit;
+                                } else if (mfa_verify($mfadata, $formaction, $userid, false)) {
+                                    // good to go
+                                } else {
+                                    $infoerr = "MFA verification failed";
+                                }
+                            }
+                        }
 					} else {
 						$infoerr = 'Existing username/password provided are not valid.';
 					}
