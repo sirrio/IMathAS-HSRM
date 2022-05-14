@@ -5,6 +5,10 @@
 } else {
 	echo '<html lang="en">';
 }
+//Look to see if a hook file is defined, and include if it is
+if (isset($CFG['hooks']['header'])) {
+    require_once($CFG['hooks']['header']);
+}
 ?>
 <head>
 <title><?php echo $installname; if (isset($pagetitle)) { echo " - $pagetitle";}?></title>
@@ -22,7 +26,7 @@ if (empty($_SESSION['tzoffset']) && !empty($CFG['static_server'])) {
     echo '<script src="'.$CFG['static_server'].'/javascript/staticcheck.js"></script>';
 }
 ?>
-<link rel="stylesheet" href="<?php echo $staticroot . "/imascore.css?ver=020721";?>" type="text/css" />
+<link rel="stylesheet" href="<?php echo $staticroot . "/imascore.css?ver=032822";?>" type="text/css" />
 <?php
 if (isset($coursetheme)) {
 	if (isset($flexwidth) || isset($usefullwidth)) {
@@ -70,7 +74,7 @@ div.breadcrumb { display:none;}
 var imasroot = '<?php echo $imasroot; ?>'; var cid = <?php echo (isset($cid) && is_numeric($cid))?$cid:0; ?>;
 var staticroot = '<?php echo $staticroot; ?>';
 </script>
-<script type="text/javascript" src="<?php echo $staticroot;?>/javascript/general.js?v=032821"></script>
+<script type="text/javascript" src="<?php echo $staticroot;?>/javascript/general.js?v=051322"></script>
 <?php
 //$_SESSION['mathdisp'] = 3;
 //
@@ -221,8 +225,8 @@ if (isset($_SESSION['graphdisp']) && $_SESSION['graphdisp']==1) {
 
 
 if (isset($useeditor) && $_SESSION['useed']==1) {
-    echo '<script type="text/javascript" src="'.$staticroot.'/tinymce4/tinymce_bundled.min.js?v=052821"></script>';
-    //echo '<script type="text/javascript" src="'.$imasroot.'/tinymce4/tinymce.js?v=031421"></script>';
+    echo '<script type="text/javascript" src="'.$staticroot.'/tinymce4/tinymce_bundled.min.js?v=062821"></script>';
+    //echo '<script type="text/javascript" src="'.$imasroot.'/tinymce4/tinymce.js?v=062821"></script>';
 
 	echo "\n";
 	echo '<script type="text/javascript">';
@@ -248,6 +252,9 @@ if (isset($placeinhead)) {
 $curdir = rtrim(dirname(__FILE__), '/\\');
 if (isset($CFG['GEN']['headerscriptinclude'])) {
 	require("$curdir/{$CFG['GEN']['headerscriptinclude']}");
+}
+if (function_exists('insertIntoHead')) {
+    insertIntoHead();
 }
 if (isset($coursetheme)) {
 	echo '<link rel="stylesheet" href="'. $staticroot . "/themes/$coursetheme?v=042217\" type=\"text/css\" />";

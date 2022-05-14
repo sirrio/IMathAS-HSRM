@@ -98,6 +98,7 @@ class CalculatedMatrixScorePart implements ScorePart
             $scorePartResult->setLastAnswerAsGiven($givenans);
             $scorePartResult->setLastAnswerAsNumber(implode('|',$givenanslistvals));
         }
+        $answer = preg_replace('/\)\s*,\s*\(/','),(',$answer);
 
         //handle nosolninf case
         if ($givenans==='oo' || $givenans==='DNE') {
@@ -162,7 +163,9 @@ class CalculatedMatrixScorePart implements ScorePart
             return $scorePartResult;
         }
 
-        if (in_array('scalarmult',$ansformats)) {
+        $fullmatrix = !in_array("",  $givenanslist, true);
+
+        if ($fullmatrix && in_array('scalarmult',$ansformats)) {
             //scale givenanslist to the magnitude of $answerlist
             $mag = sqrt(array_sum(array_map(function($x) {return $x*$x;}, $answerlist)));
             $mag2 = sqrt(array_sum(array_map(function($x) {return $x*$x;}, $givenanslistvals)));
@@ -181,7 +184,7 @@ class CalculatedMatrixScorePart implements ScorePart
             }
         }
 
-        if (in_array('ref',$ansformats)) {
+        if ($fullmatrix && in_array('ref',$ansformats)) {
             // reduce correct answer to rref
             $answerlist = matrix_scorer_rref($answerlist, $N);
             $M = count($answerlist) / $N;
@@ -193,11 +196,13 @@ class CalculatedMatrixScorePart implements ScorePart
                 }
                 $c++;
               }
+              /* Removed: Not all ref defs include leading 1's
               if ($c < $M) { // if there's a first non-zero entry, should be 1
                 if (abs($givenanslistvals[$r*$M+$c] - 1) > 1e-10) {
                   $correct = false;
                 }
               }
+              */
             }
             // now reduce given answer to rref
             if ($correct) {

@@ -35,7 +35,7 @@
 	if (isset($_POST['remove'])) {
 		$goodmsgs = array();
 		foreach ($_POST['checked'] as $msgid) {
-			if (in_numeric($msgid) && $msgid!=0) {
+			if (is_numeric($msgid) && $msgid!=0) {
 				$goodmsgs[] = intval($msgid);
 			}
 		}
@@ -120,7 +120,7 @@ function chgfilter() {
 }
 </script>
 	<form id="qform" method=post action="allstumsglist.php?page=<?php echo $page;?>&cid=<?php echo $cid;?>">
-	<p>Filter by student: <select id="filterstu" onchange="chgfilter()">
+	<p>Filter by student: <select id="filterstu" class='pii-full-name' onchange="chgfilter()">
 <?php
 	echo "<option value=\"0\" ";
 	if ($filtercid==0) {
@@ -195,11 +195,15 @@ function chgfilter() {
 		echo $line['title']; // sanitized above
         echo "</a></td><td>";
         if (isset($stulist[$line['msgfrom']])) {
+            echo '<span class="pii-full-name">';
             echo Sanitize::encodeStringForDisplay($stulist[$line['msgfrom']]);
+            echo '</span>';
         }
         echo "</td><td>";
         if (isset($stulist[$line['msgto']])) {
-            Sanitize::encodeStringForDisplay($stulist[$line['msgto']]);
+            echo '<span class="pii-full-name">';
+            echo Sanitize::encodeStringForDisplay($stulist[$line['msgto']]);
+            echo '</span>';
         }
         echo "</td>";
 		$senddate = tzdate("F j, Y, g:i a",$line['senddate']);

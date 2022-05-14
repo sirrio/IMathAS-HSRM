@@ -32,14 +32,16 @@ class StringScorePart implements ScorePart
 
         $defaultreltol = .0015;
 
-        $optionkeys = ['answer', 'strflags', 'scoremethod', 'answerformat', 'variables'];
+        $optionkeys = ['answer', 'strflags', 'scoremethod', 'answerformat', 'variables', 'requiretimes'];
         foreach ($optionkeys as $optionkey) {
             ${$optionkey} = getOptionVal($options, $optionkey, $multi, $partnum);
         }
 
         if ($multi) { $qn = ($qn+1)*1000+$partnum; }
         $givenans = normalizemathunicode($givenans);
-
+        if ($answerformat=='list') {
+            $givenans = trim($givenans, " ,");
+        }
         $scorePartResult->setLastAnswerAsGiven($givenans);
 
         if (!empty($scoremethod) &&
@@ -49,7 +51,11 @@ class StringScorePart implements ScorePart
             $scorePartResult->setRawScore(1);
             return $scorePartResult;
         }
-
+        if ($requiretimes !== '' && checkreqtimes($givenans,$requiretimes)==0) {
+            $scorePartResult->setRawScore(0);
+            return $scorePartResult;
+        }
+        
         if ($answerformat=='list') {
             $gaarr = array_map('trim',explode(',',$givenans));
             $anarr = array_map('trim',explode(',',$answer));
@@ -70,7 +76,9 @@ class StringScorePart implements ScorePart
                     $torem[] = $pc[1];
                     continue;
                 }
-                if ($pc[1]==='true' || $pc[1]==='1' || $pc[1]===1) {
+                if ($pc[0] == 'allow_diff') {
+                    $pc[1] = intval($pc[1]);
+                } else if ($pc[1]==='true' || $pc[1]==='1' || $pc[1]===1) {
                     $pc[1] = true;
                 } else {
                     $pc[1] = false;
@@ -100,9 +108,8 @@ class StringScorePart implements ScorePart
                     if (comparelogic($givenans, $answer, $variables)) {
                         $correct += 1;
                         $foundloc = $j;
-                    } else {
-                        continue; // skip normal processing
-                    }
+                    } 
+                    continue; // skip normal processing
                 }
 
                 if (count($torem)>0) {

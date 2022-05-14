@@ -9,6 +9,7 @@
   "next": "Next",
   "previous": "Previous",
   "question_n": "Question {n}",
+  "extracredit": "Extra Credit",
   "jumptocontent": "Skip Navigation",
   "launch": {
     "continue_assess": "Resume",
@@ -260,7 +261,8 @@
     "gbscore": "Recorded score",
     "bestpractice": "Best practice score",
     "lastscore": "Score on last try",
-    "license": "License"
+    "license": "License",
+    "extracredit": "This question is extra credit"
   },
   "timer": {
     "hrs": "hr | hrs",
@@ -464,7 +466,8 @@
     "used_timeext": "Used a {n} minute time limit extension",
     "attemptext": "Exception given for {n} additional versions",
     "preview_files": "Preview All Files",
-    "introtexts": "Intro and between-question text"
+    "introtexts": "Intro and between-question text",
+    "floating_scoreboxes": "Floating Scoreboxes"
   },
   "work": {
     "add": "Add Work",
@@ -482,5 +485,9 @@
     "qnav": "Question navigation",
     "qvidnav": "Video and question navigation",
     "aheader": "Assessment info"
+  },
+  "links": {
+      "settings": "Settings",
+      "questions": "Questions"
   }
 }

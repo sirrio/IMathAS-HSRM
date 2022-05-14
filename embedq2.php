@@ -78,7 +78,7 @@ $_SESSION['userprefs'] = array();
 foreach ($prefdefaults as $key => $def) {
     if (isset($QS[$key])) { // can overwrite via JWT
         $_SESSION['userprefs'][$key] = filter_var($QS[$key], FILTER_SANITIZE_NUMBER_INT);
-    } else if ($prefcookie !== null && isset($prefcookie[$key])) {
+    } else if (!empty($prefcookie) && isset($prefcookie[$key])) {
         $_SESSION['userprefs'][$key] = filter_var($prefcookie[$key], FILTER_SANITIZE_NUMBER_INT);
     } else {
         $_SESSION['userprefs'][$key] = $def;
@@ -281,7 +281,7 @@ if (isset($_GET['theme'])) {
 }
 
 $lastupdate = '20200422';
-$placeinhead .= '<link rel="stylesheet" type="text/css" href="' . $staticroot . '/assess2/vue/css/index.css?v=' . $lastupdate . '" />';
+$placeinhead = '<link rel="stylesheet" type="text/css" href="' . $staticroot . '/assess2/vue/css/index.css?v=' . $lastupdate . '" />';
 $placeinhead .= '<link rel="stylesheet" type="text/css" href="' . $staticroot . '/assess2/vue/css/chunk-common.css?v=' . $lastupdate . '" />';
 $placeinhead .= '<link rel="stylesheet" type="text/css" href="' . $staticroot . '/assess2/print.css?v=' . $lastupdate . '" media="print">';
 $placeinhead .= '<script src="' . $staticroot . '/mathquill/mathquill.min.js?v=022720" type="text/javascript"></script>';
@@ -297,7 +297,7 @@ if (!empty($CFG['assess2-use-vue-dev'])) {
     $placeinhead .= '<script src="' . $staticroot . '/javascript/assess2_min.js?v=111520" type="text/javascript"></script>';
 }
 
-$placeinhead .= '<script src="' . $staticroot . '/javascript/assess2supp.js?v=082020" type="text/javascript"></script>';
+$placeinhead .= '<script src="' . $staticroot . '/javascript/assess2supp.js?v=041522" type="text/javascript"></script>';
 $placeinhead .= '<link rel="stylesheet" type="text/css" href="' . $staticroot . '/mathquill/mathquill-basic.css">
   <link rel="stylesheet" type="text/css" href="' . $staticroot . '/mathquill/mqeditor.css">';
 
@@ -308,6 +308,7 @@ $placeinhead .= '<script type="text/javascript">
   var thisqn = '.$qn.';
   function sendresizemsg() {
    if(inIframe()){
+       console.log(document.body.scrollHeight + "," + document.body.offsetHeight + "," + document.getElementById("embedspacer").offsetHeight);
       var default_height = Math.max(
         document.body.scrollHeight, document.body.offsetHeight) + 20;
       var wrap_height = default_height - document.getElementById("embedspacer").offsetHeight;
@@ -348,7 +349,7 @@ $placeinhead .= '<script type="text/javascript">
   }
   </script>
   <style>
-  body { margin: 0;}
+  body { margin: 0; overflow-y: hidden;}
   .question {
       margin-top: 0 !important;
   }
@@ -395,6 +396,7 @@ echo '</div>';
 echo '<input type=hidden name=toscoreqn id=toscoreqn value=""/>';
 echo '<input type=hidden name=state id=state value="'.Sanitize::encodeStringForDisplay(JWT::encode($a2->getState(), $statesecret)).'" />';
 
+echo '<div class="mce-content-body" style="text-align:right;font-size:70%;margin-right:5px;"><a style="color:#666" target="_blank" href="course/showlicense.php?id='.$qsid.'">'._('License').'</a></div>';
 echo '<script>
     $(function() {
         showandinit('.$qn.','.json_encode($disp).');

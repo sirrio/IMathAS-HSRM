@@ -37,12 +37,16 @@ if (!empty($_POST['lms']) &&
             $_POST['canvas_'.$key] = str_replace('canvas.', 'canvas.'.$_POST['canvasenv'].'.', $_POST['canvas_'.$key]);
         }
     }
-  $stm = $DBH->prepare("INSERT INTO imas_lti_platforms (issuer,client_id,auth_login_url,auth_token_url,key_set_url,uniqid,created_by) VALUES (?,?,?,?,?,?,?)");
+    if (empty(trim($_POST[$lms.'_authserver']))) {
+      $_POST[$lms.'_authserver'] = '';
+    }
+  $stm = $DBH->prepare("INSERT INTO imas_lti_platforms (issuer,client_id,auth_login_url,auth_token_url,auth_server,key_set_url,uniqid,created_by) VALUES (?,?,?,?,?,?,?,?)");
   $stm->execute(array(
     trim($_POST[$lms.'_issuer']),
     trim($_POST[$lms.'_clientid']),
     trim($_POST[$lms.'_authurl']),
     trim($_POST[$lms.'_tokenurl']),
+    trim($_POST[$lms.'_authserver']),
     trim($_POST[$lms.'_keyseturl']),
     trim($_POST[$lms.'_uniqid']),
     $userid
@@ -53,16 +57,17 @@ if (!empty($_POST['lms']) &&
 
 $bbclientid = false;
 $query = "SELECT ip.id,ip.issuer,ip.client_id,ip.created_at,
-  GROUP_CONCAT(CONCAT(ig.name,' (',DATE_FORMAT(iga.created_at,'%e %b %Y'),')') SEPARATOR ';;') AS groups FROM
+  GROUP_CONCAT(CONCAT(ig.name,' (',DATE_FORMAT(iga.created_at,'%e %b %Y'),')') SEPARATOR ';;') AS groupslist FROM
   imas_lti_platforms AS ip
-  LEFT JOIN imas_lti_deployments AS id ON id.platform=ip.id
-  LEFT JOIN imas_lti_groupassoc AS iga ON iga.deploymentid=id.id
+  LEFT JOIN imas_lti_deployments AS ild ON ild.platform=ip.id
+  LEFT JOIN imas_lti_groupassoc AS iga ON iga.deploymentid=ild.id
   LEFT JOIN imas_groups AS ig ON iga.groupid=ig.id ";
 if ($myrights < 100) {
     $query .= 'LEFT JOIN imas_users AS iu ON iu.id=ip.created_by ';
-    $query .= 'WHERE iga.groupid=? OR iu.groupid=?';
+    $query .= 'WHERE iga.groupid=? OR iu.groupid=? ';
 }
 $query .= "GROUP BY ip.id ORDER BY ip.issuer,ip.created_at";
+
 if ($myrights < 100) {
     $stm = $DBH->prepare($query);
     $stm->execute(array($groupid,$groupid));
@@ -117,7 +122,7 @@ if ($platforms === false) {
     echo '<td>'.Sanitize::encodeStringForDisplay($row['issuer']).'</td>';
     echo '<td>'.Sanitize::encodeStringForDisplay($row['client_id']).'</td>';
     echo '<td>'. date("j M Y ", strtotime($row['created_at'])).'</td>';
-    echo '<td>'. str_replace(';;','<br>',Sanitize::encodeStringForDisplay($row['groups'])).'</td>';
+    echo '<td>'. str_replace(';;','<br>',Sanitize::encodeStringForDisplay($row['groupslist'])).'</td>';
     if ($myrights == 100) {
         echo '<td><button type=submit name="delete" value="'.Sanitize::encodeStringForDisplay($row['id']).'" ';
         echo 'onclick="return confirm(\''._('Are you SURE you want to delete this platform?').'\');">';
@@ -287,7 +292,8 @@ echo '<ul>';
 echo '<li><label>'._('Client Id:').' <input name=d2l_clientid size=50/></label></li>';
 echo '<li><label>'._('Brightspace Keyset URL:').' <input name=d2l_keyseturl size=50/></label></li>';
 echo '<li><label>'._('Brightspace OAuth2 Access Token URL:').' <input name=d2l_tokenurl size=50/></label></li>';
-echo '<li><label>'._('OpenID COnnect Authentication Endpoint:').' <input name=d2l_authurl size=50/></label></li>';
+echo '<li><label>'._('OpenID Connect Authentication Endpoint:').' <input name=d2l_authurl size=50/></label></li>';
+echo '<li><label>'._('Brightspace OAuth2 Audience:').' <input name=d2l_authserver size=50/></label></li>';
 echo '<li><label>'._('Issuer:').' <input name=d2l_issuer size=50/></label></li>';
 echo '<li><label>'._('The u= from the OpenID Connect URL:').'<input size=15 name=d2l_uniqid value="'.Sanitize::encodeStringForDisplay($uniqid).'" /></label></li>';
 echo '</ul>';

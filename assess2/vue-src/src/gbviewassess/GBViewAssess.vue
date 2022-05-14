@@ -5,7 +5,7 @@
     </div>
     <div v-else class="gbmainview">
       <h1>{{ $t('gradebook.detail_title')}}</h1>
-      <h2>{{ aData.userfullname }}</h2>
+      <h2><span class="pii-full-name">{{ aData.userfullname }}</span></h2>
       <h3>{{ aData.name }}</h3>
 
       <div>
@@ -62,6 +62,7 @@
             <input id="assessoverride" size=4
               :value = "aData.scoreoverride"
               @input = "setScoreOverride"
+              @keyup.enter="submitForm"
             />/{{ aData.points_possible }}
           </span>
           <span v-else>
@@ -86,7 +87,7 @@
           </button>
           <span v-if="showOverride">
             <label for="assessoverride">{{ $t('gradebook.override') }}</label>:
-            <input id="assessoverride" size=4 v-model="assessOverride" />
+            <input id="assessoverride" size=4 v-model="assessOverride" @keyup.enter="submitForm" />
           </span>
         </span>
         <button
@@ -253,12 +254,24 @@
                 {{ $t('gradebook.show_all_work') }}
               </button>
               <button
+                type="button"
                 @click = "previewFiles"
               >
                 {{ $t('gradebook.preview_files') }}
               </button>
+              <button
+                type="button"
+                @click="toggleFloatingScoreboxes"
+              >
+                {{ $t('gradebook.floating_scoreboxes') }}
+              </button>
             </p>
           </div>
+        </div>
+        <div v-else-if="viewFull">
+          <button @click="hidetexts = !hidetexts; loadTexts()">
+            {{ $t(hidetexts ? 'print.show_text' : 'print.hide_text') }}
+          </button>
         </div>
 
         <div v-if="viewFull">
@@ -288,6 +301,9 @@
                 <strong>
                   {{ $tc('question_n', qn+1) }}.
                 </strong>
+                <em v-if="qdata[curQver[qn]].extracredit" class="small subdued">
+                  {{ $t('extracredit') }}
+                </em>
 
                 <gb-question-select
                   v-if = "aData.submitby === 'by_question'"
@@ -322,6 +338,7 @@
                 :canedit = "canEdit"
                 :qdata = "qdata[curQver[qn]]"
                 :qn = "qn"
+                @submitform = "submitForm"
               />
             </div>
           </div>
@@ -717,6 +734,9 @@ export default {
       var doexit = (exit === true);
       actions.saveChanges(doexit);
     },
+    submitForm () {
+      this.submitChanges(true);
+    },
     exit () {
       window.location = window.exiturl;
     },
@@ -765,6 +785,9 @@ export default {
     previewFiles () {
       window.previewallfiles();
     },
+    toggleFloatingScoreboxes () {
+      window.toggleScrollingScoreboxes();
+    },
     loadTexts () {
       if (!store.assessInfo.hasOwnProperty('intro')) {
         actions.loadGbTexts();
@@ -812,6 +835,7 @@ export default {
   right: 10px;
   bottom: 10px;
   text-align: center;
+  z-index: 10;
 }
 .bigquestionwrap {
   border: 1px solid #ccc;
@@ -821,5 +845,8 @@ export default {
 .bigquestionwrap .headerpane {
   padding: 8px;
   background-color: #eee;
+}
+.hoverbox {
+  background-color: #fff; z-index: 9; box-shadow: 0px -3px 5px 0px rgb(0 0 0 / 75%);
 }
 </style>

@@ -49,7 +49,10 @@ if ($isstudent) {
   $assess_info->applyTimelimitMultiplier($studentinfo['timelimitmult']);
 }
 
-
+//check to see if prereq has been met
+if ($isstudent) {
+  $assess_info->checkPrereq($uid);
+}
 
 // reject if not available
 if ($assess_info->getSetting('available') === 'practice' && !empty($_POST['practice'])) {
@@ -164,7 +167,7 @@ if (!$canViewAll && $assess_info->getSetting('isgroup') == 2) {
     $current_members = array_merge($current_members, $available_new_members);
 
     // if we already have an assess record, need to copy it to new group members
-    if ($assess_record->hasRecord()) {
+    if ($assess_record->hasRecord() && count($available_new_members) > 0) {
         $sourcedids = AssessUtils::formLTIsourcedId($available_new_members, $aid, true);
         // get current record
         $fieldstocopy = 'assessmentid,agroupid,timeontask,starttime,lastchange,score,status,scoreddata,practicedata,ver';
@@ -299,6 +302,9 @@ if ($preview_all) {
   $assess_info->overrideSetting('displaymethod','full');
   $assess_record->setTeacherInGb(true); // enables answers showing
   $assessInfoOut['preview_all'] = true;
+  foreach ($assessInfoOut['interquestion_text'] as $k=>$v) {
+    unset($assessInfoOut['interquestion_text'][$k]['ispage']); // hide pages on preview all
+  }
 } else {
   $assessInfoOut['preview_all'] = false;
 }

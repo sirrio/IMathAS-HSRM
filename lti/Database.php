@@ -173,6 +173,7 @@ class Imathas_LTI_Database implements LTI\Database
         return LTI\LTI_Registration::new ()
             ->set_auth_login_url($row['auth_login_url'])
             ->set_auth_token_url($row['auth_token_url'])
+            ->set_auth_server($row['auth_server'])
             ->set_client_id($row['client_id'])
             ->set_key_set_url($row['key_set_url'])
             ->set_issuer($iss)
@@ -309,20 +310,30 @@ class Imathas_LTI_Database implements LTI\Database
     /**
      * Get local user id
      * @param  LTI_Message_Launch $launch
+     * @param  string $role
      * @return false|int local userid
      */
-    public function get_local_userid(LTI\LTI_Message_Launch $launch)
+    public function get_local_userid(LTI\LTI_Message_Launch $launch, string $role)
     {
         $ltiuserid = $launch->get_platform_user_id();
         $platform_id = $launch->get_platform_id();
 
-        $stm = $this->dbh->prepare('SELECT userid FROM imas_ltiusers WHERE ltiuserid=? AND org=?');
+        $query = 'SELECT lti.userid FROM imas_ltiusers AS lti 
+            JOIN imas_users AS iu ON lti.userid=iu.id 
+            WHERE lti.ltiuserid=? AND lti.org=?';
+        if ($role == 'Instructor') {
+            $query .= ' AND iu.rights > 19';
+        }
+        $query .= ' ORDER BY iu.rights, lti.id';
+
+        $stm = $this->dbh->prepare($query);
         $stm->execute(array($ltiuserid, 'LTI13-' . $platform_id));
         $userid = $stm->fetchColumn(0);
         if ($userid === false) {
             $contextid = $launch->get_platform_context_id();
             $migration_claim = $launch->get_migration_claim();
         }
+
         if ($userid === false && 
             !empty($migration_claim) && 
             $this->verify_migration_claim($migration_claim)
@@ -333,7 +344,14 @@ class Imathas_LTI_Database implements LTI\Database
                 $oldltiuserid = $ltiuserid;
             }
             $oldkey = $migration_claim['oauth_consumer_key'];
-            $stm = $this->dbh->prepare('SELECT userid FROM imas_ltiusers WHERE ltiuserid=? AND org LIKE ?');
+            $query = 'SELECT lti.userid FROM imas_ltiusers AS lti 
+                JOIN imas_users AS iu ON lti.userid=iu.id
+                WHERE lti.ltiuserid=? AND lti.org LIKE ?';
+            if ($role == 'Instructor') {
+                $query .= ' AND iu.rights > 19';
+            }
+            $query .= ' ORDER BY iu.rights, lti.id';
+            $stm = $this->dbh->prepare($query);
             $stm->execute(array($oldltiuserid, $oldkey.':%'));
             $userid = $stm->fetchColumn(0);
             if ($userid !== false) {
@@ -344,6 +362,7 @@ class Imathas_LTI_Database implements LTI\Database
             // look to see if we already have a user record with the same context id
             // from an LTI 1.1 connection
             $groups = $this->get_groups($platform_id, $launch->get_deployment_id());
+
             if (count($groups)==0) {
                 return false;
             }
@@ -354,15 +373,37 @@ class Imathas_LTI_Database implements LTI\Database
                 JOIN imas_users AS iu ON ic.ownerid=iu.id WHERE ilc.contextid=?';
             $stm = $this->dbh->prepare($query);
             $stm->execute(array($contextid));
+
             $qarr = array($ltiuserid);
+
+            $old_userid = $launch->get_lti1p1_userid();
+            if ($old_userid !== false && $old_userid != $ltiuserid) {
+                $qarr[] = $old_userid;
+            }
+            $orgcnt = 0;
             while ($row = $stm->fetch(PDO::FETCH_ASSOC)) {
+                if (substr($row['org'],0,5) == 'LTI13') { continue; }
                 if (in_array($row['groupid'], $groups)) { // check course is in right group
                     $key = explode(':', $row['org'])[0];
                     $qarr[] = $key.':%';
+                    $orgcnt++;
                 }
             }
-            if (count($qarr)==2) { // only use if one matching association
-                $stm = $this->dbh->prepare('SELECT userid FROM imas_ltiusers WHERE ltiuserid=? AND org LIKE ?');
+
+            if ($orgcnt == 1) { // only use if one matching association
+                $query = 'SELECT lti.userid FROM imas_ltiusers AS lti 
+                    JOIN imas_users AS iu ON lti.userid=iu.id ';
+                if ($old_userid !== false && $old_userid != $ltiuserid) {
+                    $query .= 'WHERE (lti.ltiuserid=? OR lti.ltiuserid=?) AND lti.org LIKE ?';
+                } else {
+                    $query .= 'WHERE lti.ltiuserid=? AND lti.org LIKE ?';
+                    //$stm = $this->dbh->prepare('SELECT userid FROM imas_ltiusers WHERE ltiuserid=? AND org LIKE ?');
+                }
+                if ($role == 'Instructor') {
+                    $query .= ' AND iu.rights > 19';
+                }
+                $query .= ' ORDER BY iu.rights, lti.id';
+                $stm = $this->dbh->prepare($query);
                 $stm->execute($qarr);
                 $userid = $stm->fetchColumn(0);
                 if ($userid !== false) {
@@ -1250,8 +1291,13 @@ class Imathas_LTI_Database implements LTI\Database
                     }
                 }
                 // enroll in course
+                if (!empty($member['context_label'])) {
+                    $thissection = $member['context_label'];
+                } else {
+                    $thissection = $section;
+                }
                 $stm = $this->dbh->prepare('INSERT INTO imas_students (userid,courseid,section,latepass,lticourseid) VALUES (?,?,?,?,?)');
-                $stm->execute(array($localuserid, $localcourse->get_courseid(), $section, $deflatepass, $localcourse->get_id()));
+                $stm->execute(array($localuserid, $localcourse->get_courseid(), $thissection, $deflatepass, $localcourse->get_id()));
 
                 $enrollcnt++;
             } else {

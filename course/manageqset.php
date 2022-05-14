@@ -346,7 +346,7 @@ if ($myrights<20) {
 					foreach ($libarray as $qsetid) { //for each question
 						//determine which libraries to remove from; my lib assignments - newlibs
 						if (isset($mylibs[$qsetid])) {
-                            $toremove = array_diff($mylibs[$qsetid],$newlibs);
+                            $toremove = array_values(array_diff($mylibs[$qsetid],$newlibs));
                             if (count($toremove)==1 && $toremove[0] == 0) {
                                 // only in unassigned - nothing to do
                                 continue;
@@ -367,7 +367,6 @@ if ($myrights<20) {
 							}
 						}
 					}
-
 				}
 			}
 			header('Location: ' . $GLOBALS['basesiteurl'] . "/course/manageqset.php?cid=$cid" . "&r=" . Sanitize::randomQueryStringParam());
@@ -762,7 +761,7 @@ if ($myrights<20) {
 		*/
     $qarr = $searchlikevals;
 		$query = "SELECT imas_questionset.id,imas_questionset.ownerid,imas_questionset.description,imas_questionset.userights,imas_questionset.lastmoddate,imas_questionset.extref,imas_questionset.replaceby,";
-		$query .= "imas_questionset.qtype,imas_users.firstName,imas_users.lastName,imas_users.groupid,imas_library_items.libid,imas_library_items.junkflag, imas_questionset.broken, imas_library_items.id AS libitemid ";
+		$query .= "imas_questionset.qtype,SUBSTR(imas_questionset.solution,1,1) AS solution,imas_questionset.solutionopts,imas_users.firstName,imas_users.lastName,imas_users.groupid,imas_library_items.libid,imas_library_items.junkflag, imas_questionset.broken, imas_library_items.id AS libitemid ";
 		$query .= "FROM imas_questionset,imas_library_items,imas_users WHERE imas_questionset.deleted=0 AND imas_library_items.deleted=0 AND $searchlikes ";
 		$query .= "imas_library_items.qsetid=imas_questionset.id AND imas_questionset.ownerid=imas_users.id ";
 
@@ -862,7 +861,9 @@ if ($myrights<20) {
 					$page_questionTable[$i]['extref'] .= "<img src=\"$staticroot/img/html_tiny.png\" alt=\"Help Resource\"/>";
 				}
 			}
-
+            if ($line['solution']!='' && ($line['solutionopts']&2)==2) {
+				$page_questionTable[$i]['extref'] .= "<img src=\"$staticroot/img/assess_tiny.png\" alt=\""._("Written Example")."\"/>";
+			}
 
 			$page_questionTable[$i]['preview'] = "<input type=button value=\"Preview\" onClick=\"previewq('selform',$ln,".Sanitize::onlyInt($line['id']).")\"/>";
 			$page_questionTable[$i]['type'] = $line['qtype'];

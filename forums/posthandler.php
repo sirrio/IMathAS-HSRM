@@ -168,14 +168,18 @@ if (isset($_GET['modify'])) { //adding or modifying post
 				if (isset($studentid) && $autoscore != '' && strlen(Sanitize::stripBlankLines($_POST['message']))>1) {
 					$autoscore = explode(',',$autoscore);
 					if ($autoscore[2]>0) { //assigning points
-						$stm = $DBH->prepare("SELECT count(id) FROM imas_forum_posts WHERE forumid=? AND userid=? AND parent>0");
-						$stm->execute(array($forumid, $userid));
-						if ($stm->fetchColumn(0) <= $autoscore[3]) {
-							$query = "INSERT INTO imas_grades (gradetype,gradetypeid,userid,refid,score) VALUES ";
-							$query .= "(:gradetype, :gradetypeid, :userid, :refid, :score)";
-							$stm = $DBH->prepare($query);
-							$stm->execute(array(':gradetype'=>'forum', ':gradetypeid'=>$forumid, ':userid'=>$userid, ':refid'=>$_GET['modify'], ':score'=>$autoscore[2]));
-						}
+                        $stm = $DBH->prepare("SELECT userid FROM imas_forum_posts WHERE id=?");
+                        $stm->execute([$threadid]);
+                        if ($stm->fetchColumn(0) != $userid) { // only give points for replies if not own thread
+                            $stm = $DBH->prepare("SELECT count(id) FROM imas_forum_posts WHERE forumid=? AND userid=? AND parent>0");
+                            $stm->execute(array($forumid, $userid));
+                            if ($stm->fetchColumn(0) <= $autoscore[3]) {
+                                $query = "INSERT INTO imas_grades (gradetype,gradetypeid,userid,refid,score) VALUES ";
+                                $query .= "(:gradetype, :gradetypeid, :userid, :refid, :score)";
+                                $stm = $DBH->prepare($query);
+                                $stm->execute(array(':gradetype'=>'forum', ':gradetypeid'=>$forumid, ':userid'=>$userid, ':refid'=>$_GET['modify'], ':score'=>$autoscore[2]));
+                            }
+                        }
 					}
 				}
 				if ($isteacher && isset($_POST['points']) && trim($_POST['points'])!='') {
@@ -465,8 +469,7 @@ if (isset($_GET['modify'])) { //adding or modifying post
 							$stm->execute($array);
 							// $result = mysql_query($query) or die("Query failed : $query " . mysql_error());
 							if ($stm->rowCount()>0) {
-								$notice =  '<span class=noticetext style="font-weight:bold">This question has already been posted about.</span><br/>';
-								$notice .= 'Please read and participate in the existing discussion.';
+								$notice =  _('This question has already been posted about. Please read and participate in the existing discussion using the link below.');
 								while ($row = $stm->fetch(PDO::FETCH_NUM)) {
 									$notice .=  "<br/><a href=\"posts.php?cid=$cid&forum=$forumid&thread=" . Sanitize::encodeUrlParam($row[0]) . "\">".Sanitize::encodeStringForDisplay($line['subject'])."</a>";
 								}
@@ -508,7 +511,7 @@ if (isset($_GET['modify'])) { //adding or modifying post
         echo "\">\n";
 		echo '<input type="hidden" name="MAX_FILE_SIZE" value="10485760" />';
 		if (isset($notice) && $notice!='') {
-			echo '<span class="form">&nbsp;</span><span class="formright">'.$notice.'</span><br class="form"/>';
+			echo '<p>'.$notice.'</p>';
 		} else {
 			echo "<span class=form><label for=\"subject\">Subject:</label></span>";
 			echo "<span class=formright><input type=text size=50 name=subject id=subject value=\"".Sanitize::encodeStringForDisplay($line['subject'])."\"></span><br class=form>\n";

@@ -1006,6 +1006,7 @@ function generateOutput() {
     var out = "";
     var text_segments = [];
     var pts = {};
+    var extracredit = {};
     var qcnt = 0;
 
     for (var i = 0; i < itemarray.length; i++) {
@@ -1022,25 +1023,30 @@ function generateOutput() {
             });
         } else if (itemarray[i].length < 5) {
             //is group
-            if (out.length > 0) {
-                out += ",";
+            if (itemarray[i][2].length > 0) { // skip if group is empty; shouldn't happen
+                if (out.length > 0) {
+                    out += ",";
+                }
+                out += itemarray[i][0] + "|" + itemarray[i][1];
+                for (var j = 0; j < itemarray[i][2].length; j++) {
+                    out += "~" + itemarray[i][2][j][0];
+                    pts["qn" + itemarray[i][2][j][0]] = itemarray[i][2][j][4];
+                    itemarray[i][2][j][9] = 0;
+                    extracredit["qn" + itemarray[i][2][j][0]] = 0; // no EC in groups
+                }
+                qcnt += itemarray[i][0];
             }
-            out += itemarray[i][0] + "|" + itemarray[i][1];
-            for (var j = 0; j < itemarray[i][2].length; j++) {
-                out += "~" + itemarray[i][2][j][0];
-                pts["qn" + itemarray[i][2][j][0]] = itemarray[i][2][j][4];
-            }
-            qcnt += itemarray[i][0];
         } else {
             if (out.length > 0) {
                 out += ",";
             }
             out += itemarray[i][0];
             pts["qn" + itemarray[i][0]] = itemarray[i][4];
+            extracredit["qn" + itemarray[i][0]] = itemarray[i][9];
             qcnt++;
         }
     }
-    return [out, text_segments, pts];
+    return [out, text_segments, pts, extracredit];
 }
 
 function collapseqgrp(i) {
@@ -1115,6 +1121,7 @@ function generateTable() {
     var badgrppoints = false;
     var badthisgrppoints = false;
     var grppoints = -1;
+    var ECmark = ' <span onmouseover="tipshow(this,\'' + _('Extra Credit') + '\')" onmouseout="tipout()">' + _('EC') + '</span>';
     for (var i = 0; i < itemcount; i++) {
         curistext = 0;
         curisgroup = 0;
@@ -1135,6 +1142,7 @@ function generateTable() {
         //var ms = generateMoveSelect(i,itemcount);
         var ms = generateMoveSelect2(i);
         grppoints = -1;
+        grpextracredit = -1;
         badthisgrppoints = false;
         for (var j = 0; j < curitems.length; j++) {
             if (alt == 0) {
@@ -1421,18 +1429,35 @@ function generateTable() {
                     "</a></td>";
                 //}
             } else {
+                var tdtitle = '';
+                var tdclass = '';
+                var descricon = '';
                 if (beentaken && curitems[j][6] == 1) {
-                    html +=
-                        '<td class="greystrike" title="' + _("Question Withdrawn") + '">';
-                } else {
-                    html += "<td>";
+                    tdclass = 'greystrike';
+                    tdtitle = _("Question Withdrawn");
+                } else if (curitems[j][10] == 1) {
+                    tdclass = 'qbroken';
                 }
+                if (curitems[j][10] == 1) {
+                    descricon = '<span title="' + _('Marked as broken') + '">' + 
+                    '<svg viewBox="0 0 24 24" width="16" height="16" stroke="#f66" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19.7 1.3 19.6 9 16.2 6.3 13.8 11.3 10.5 8.3 7 11.7 3.6 9.2l0-7.9z" class="a"></path><path d="m19.7 22.9 0-7.8-2-1.4-3.1 4-3.3-3-3.8 3.8-4-3.9v8.4z" class="a"></path></svg>' + 
+                    '</span> ';
+                }
+                html += '<td';
+                if (tdclass !== '') {
+                    html += ' class="' + tdclass + '"';
+                }
+                if (tdtitle !== '') {
+                    html += ' title="' + tdtitle + '"';
+                }
+                html += '>' + descricon;
                 html +=
                     '<input type=hidden name="curq[]" id="oqc' +
                     ln +
                     '" value="' +
                     curitems[j][1] +
                     '"/>';
+                
                 html += curitems[j][2] + "</td>"; //description
                 html += '<td class="nowrap">';
                 if ((curitems[j][7] & 32) == 32) {
@@ -1561,16 +1586,20 @@ function generateTable() {
                     //	html += "<td class=c><span class=noticehighlight>"+curpt+"</span></td>"; //points
                 } else {
                     if (beentaken) {
-                        html += "<td class=c>" + curpt + "</td>";
+                        html += "<td>" + curpt + 
+                            (curitems[j][9] > 0 ? ECmark : '') +
+                            "</td>";
                     } else {
                         html +=
-                            '<td class=c><input size=2 id="pts-' +
+                            '<td><input size=2 id="pts-' +
                             i +
                             '" value="' +
                             curpt +
                             '" data-lastval="' +
                             curpt +
-                            '"/></td>'; //points
+                            '"/>' +
+                            (curitems[j][9] > 0 ? ECmark : '') +
+                            '</td>'; //points
                     }
                 }
 
@@ -1697,7 +1726,9 @@ function generateTable() {
             ln++;
         }
         if (curistext == 0) {
-            pttotal += curpt * (curisgroup ? itemarray[i][0] : 1);
+            if (curisgroup || itemarray[i][9] == 0) {
+                pttotal += curpt * (curisgroup ? itemarray[i][0] : 1);
+            }
             curqnum += curisgroup ? itemarray[i][0] : 1;
         }
         alt = 1 - alt;
@@ -1830,6 +1861,7 @@ function submitChanges() {
     };
     if (!beentaken) {
         outdata["pts"] = JSON.stringify(data[2]);
+        outdata["extracredit"] = JSON.stringify(data[3]);
         outdata["defpts"] = $("#defpts").val();
     }
     $.ajax({
@@ -1913,7 +1945,7 @@ function addwithsettings() {
         checked.push(this.value);
     });
     if (checked.length == 0) { return; }
-    GB_show('Question Settings',qsettingsaddr + '&toaddqs=' + checked.join('-') + '&lih=' + lastitemhash,900,500);
+    GB_show('Question Settings',qsettingsaddr + '&toaddqs=' + encodeURIComponent(checked.join(';')) + '&lih=' + lastitemhash,900,500);
 }
 
 function modsettings() {
@@ -1922,7 +1954,7 @@ function modsettings() {
         checked.push(this.value);
     });
     if (checked.length == 0) { return; }
-    GB_show('Question Settings',qsettingsaddr + '&modqs=' + checked.join('-') + '&lih=' + lastitemhash,900,500);
+    GB_show('Question Settings',qsettingsaddr + '&modqs=' + encodeURIComponent(checked.join(';')) + '&lih=' + lastitemhash,900,500);
 }
 
 /*
