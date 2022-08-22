@@ -120,8 +120,8 @@ var myMQeditor = (function($) {
               {l:'\\gt', pr:'<span class="mq-binary-operator">&gt;</span>'},
               {l:'\\le', pr:'<span class="mq-binary-operator">&le;</span>'},
               {l:'\\ge', pr:'<span class="mq-binary-operator">&ge;</span>'},
-              {p:'or', c:'w', w:'\\text{ or }'},
               {l:'\\ne', pr:'<span class="mq-binary-operator">&ne;</span>'},
+              {p:'or', c:'w', w:'\\text{ or }'},
               {p:'DNE', 'sm':2},
               {p:'all reals', c:'w', w:'\\text{all reals}', 'sm':2}
             ]
@@ -319,8 +319,8 @@ var myMQeditor = (function($) {
                 {l:'\\gt', pr:'<span class="mq-binary-operator">&gt;</span>'},
                 {l:'\\le', pr:'<span class="mq-binary-operator">&le;</span>'},
                 {l:'\\ge', pr:'<span class="mq-binary-operator">&ge;</span>'},
-                {p:'or', c:'w', w:'\\text{ or }'},
                 {l:'\\ne', pr:'<span class="mq-binary-operator">&ne;</span>'},
+                {p:'or', c:'w', w:'\\text{ or }'},
                 {p:'DNE', 'sm':2},
                 {p:'all reals', c:'w', w:'\\text{all reals}', 'sm':2}  
             ]
@@ -499,6 +499,11 @@ var myMQeditor = (function($) {
       if (calcformat.match(/allowplusminus/)) {
         baselayout.tabs[6].tabcontent[0].contents[17] = {l:'\\pm', pr:'<span class="mq-binary-operator">&plusmn;</span>'};
       }
+      if (calcformat.match(/inequality/)) {
+        //baselayout.tabs[6].tabcontent[0].contents[8].s = 0.5;
+        //baselayout.tabs[6].tabcontent[0].contents.splice(9,0,  {l:'\\ne', s:0.5, pr:'<span class="mq-binary-operator">&ne;</span>'});
+        baselayout.tabs[3].p = 'Ineq';
+      }
     } else {
       baselayout = $.extend(true, [], underLayout3);
       if (calcformat.match(/\bdecimal/)) {
@@ -525,10 +530,12 @@ var myMQeditor = (function($) {
           );
         }
       }
-      if (qtype=='numfunc' && calcformat.match(/inequality/)) {
-        baselayout.tabs[3].enabled = true;
-        baselayout.tabs[3].tabcontent[0].contents.splice(4,3);
-      }
+      
+    }
+    if (qtype=='numfunc' && calcformat.match(/inequality/)) {
+      baselayout.tabs[3].enabled = true;
+      baselayout.tabs[3].tabcontent[0].contents.splice(5,3);
+      baselayout.tabs[3].tabcontent[0].s = 5;
     }
     if (!calcformat.match(/(fraction|mixednumber|fracordec|\bdecimal|logic|setexp|chemeqn)/)) {
       baselayout.tabs[1].enabled = true;

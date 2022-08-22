@@ -1479,6 +1479,9 @@ function processCalcNtuple(fullstr, format) {
 }
 
 function processCalcComplex(fullstr, format) {
+  if (format.indexOf('allowplusminus')!=-1) {
+    fullstr = fullstr.replace(/(.*?)\+\-(.*?)(,|$)/g, '$1+$2,$1-$2$3');
+  }
   var err = '';
   var arr = fullstr.split(',');
   var str = '';
@@ -1655,19 +1658,19 @@ function processNumfunc(qn, fullstr, format) {
     totesteqn = totesteqn.replace(/,/g,"").replace(/^\s+/,'').replace(/\s+$/,'').replace(/degree/g,'');
     var remapVars = strprocess[2].split('|');
 
-    if (totesteqn.match(/(<=|>=|<|>)/)) {
+    if (totesteqn.match(/(<=|>=|<|>|!=)/)) {
         if (!isineq) {
             if (iseqn) {
                 err += _("syntax error: you gave an inequality, not an equation") + '. ';
             } else {
                 err += _("syntax error: you gave an inequality, not an expression")+ '. ';
             }
-        } else if (totesteqn.match(/(<=|>=|<|>)/g).length>1) {
+        } else if (totesteqn.match(/(<=|>=|<|>|!=)/g).length>1) {
             err += _("syntax error: your inequality should only contain one inequality symbol")+ '. ';
         }
-        totesteqn = totesteqn.replace(/(.*)(<=|>=|<|>)(.*)/,"$1-($3)");
+        totesteqn = totesteqn.replace(/(.*)(<=|>=|<|>|!=)(.*)/,"$1-($3)");
     } else if (totesteqn.match(/=/)) {
-        if (isineq) {
+        if (isineq && !iseqn) {
             err += _("syntax error: you gave an equation, not an inequality")+ '. ';
         } else if (!iseqn) {
             err += _("syntax error: you gave an equation, not an expression")+ '. ';
@@ -1675,6 +1678,8 @@ function processNumfunc(qn, fullstr, format) {
             err += _("syntax error: your equation should only contain one equal sign")+ '. ';
         }
         totesteqn = totesteqn.replace(/(.*)=(.*)/,"$1-($2)");
+    } else if (iseqn && isineq) {
+        err += _("syntax error: this is not an equation or inequality")+ '. ';
     } else if (iseqn) {
         err += _("syntax error: this is not an equation")+ '. ';
     } else if (isineq) {

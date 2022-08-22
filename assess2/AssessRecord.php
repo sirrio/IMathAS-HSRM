@@ -1536,7 +1536,7 @@ class AssessRecord
    */
   public function getLastRawResult($qn) {
     $by_question = ($this->assess_info->getSetting('submitby') == 'by_question');
-    $aver = $this->getAssessVer($ver);
+    $aver = $this->getAssessVer('last');
     $question_versions = $aver['questions'][$qn]['question_versions'];
     $curq = $question_versions[count($question_versions) - 1];
     $rawscores = array();
@@ -2242,7 +2242,11 @@ class AssessRecord
       }
       $scorenonzeroparts = array();
       $scoreiscorrectparts = array();
-      $maxpn = max(array_keys($curq['tries']));
+      if (isset($curq['answeights'])) {
+        $maxpn = count($curq['answeights']) - 1;
+      } else {
+        $maxpn = max(array_keys($curq['tries']));
+      }
       for ($pn = 0; $pn <= $maxpn; $pn++) {
         if (empty($curq['tries'][$pn])) {
           $scorenonzeroparts[$pn] = -1;
