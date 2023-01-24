@@ -53,7 +53,12 @@ function checkreqtimes($tocheck,$rtimes) {
 			} else if ($list[$i]=='ignore_symbol') {
 				$cleanans = str_replace($list[$i+1],'',$cleanans);
 				continue;
-			}
+			} else if ($list[$i]=='ignore_spaces') {
+				if ($list[$i+1]==='1' || $list[$i+1]==='true' || $list[$i+1]==='=1') {
+					$cleanans = str_replace(' ','',$cleanans);
+				}
+				continue;
+            }
 			$comp = substr($list[$i+1],0,1);
 			if (substr($list[$i+1],1,1)==='=') { //<=, >=, ==, !=
 				if ($comp=='<' || $comp=='>') {
@@ -74,8 +79,12 @@ function checkreqtimes($tocheck,$rtimes) {
 						$all_numbers = $matches[0];
 						array_walk($all_numbers, 'ltrimzero');
 					}
-					$lookfor = ltrim(str_replace(array('-', ' '),'',substr($lookfor,1)), ' 0');
-					$nummatch = count(array_keys($all_numbers,$lookfor));
+					$lookfor = trim(substr($lookfor,1));
+                    if ($lookfor[0] == '-') {
+                        $lookfor = substr($lookfor,1);
+                    }
+                    $lookfor = ltrim($lookfor, ' 0');
+                    $nummatch = count(array_keys($all_numbers,$lookfor));
 				} else if (strlen($lookfor)>6 && substr($lookfor,0,6)=='regex:') {
 					$regex = str_replace('/','\\/',substr($lookfor,6));
 					$nummatch = preg_match_all('/'.$regex.'/'.($ignore_case?'i':''),$cleanans,$m);
@@ -318,6 +327,7 @@ function ntupleToString($ntuples) {
 }
 
 function parseInterval($str, $islist = false) {
+    if (strlen($str)<5) { return false; }
 	if ($islist) {
 		$ints = preg_split('/(?<=[\)\]])\s*,\s*(?=[\(\[])/',$str);
 	} else {
@@ -326,7 +336,8 @@ function parseInterval($str, $islist = false) {
 
 	$out = array();
 	foreach ($ints as $int) {
-    $int = trim($int);
+        $int = trim($int);
+        if (strlen($int) < 5) { return false;}
 		$i = array();
 		$i['lb'] = $int[0];
 		$i['rb'] = $int[strlen($int)-1];
@@ -367,6 +378,9 @@ function parsedIntervalToString($parsed, $islist) {
 function parseChemical($string) {
     $string = str_replace(['<->','<=>'], 'rightleftharpoons', $string);
     $string = str_replace(['to','rarr','implies'], '->', $string);
+    $string = preg_replace('/\^{(.*?)}/', '^($1)', $string);
+    $string = preg_replace('/\(\(([^\(\)]*)\)\)/', '($1)', $string);
+    $string = str_replace('^+','^(+)', $string);
     $parts = preg_split('/(->|rightleftharpoons)/', $string, -1, PREG_SPLIT_DELIM_CAPTURE);
     $reactiontype = (count($parts) > 1) ? $parts[1] : null;
     $sides = [];
@@ -663,7 +677,7 @@ function setupnosolninf($qn, $answerbox, $answer, $ansformats, $la, $ansprompt, 
 	$out .= '<div id="qnwrap'.$qn.'" class="'.$colorbox.'" role="group" ';
   if (preg_match('/aria-label=".*?"/', $answerbox, $arialabel)) {
     $answerbox = preg_replace('/aria-label=".*?"/',
-      'aria-label="'.Sanitize::encodeStringForDisplay($specsoln).'"', $answerbox);
+      'aria-label="'.Sanitize::encodeStringForDisplay(str_replace('`','',$specsoln)).'"', $answerbox);
     $out .= $arialabel[0];
   }
   $out .= '>';
@@ -721,7 +735,7 @@ function scorenosolninf($qn, $givenans, $answer, $ansprompt, $format="number") {
 	if (preg_match('/^no\s*solution/',$answer) || $answer===$nosoln) {
 		$answer = 'DNE';
 	}
-	$qs = $_POST["qs$qn"];
+	$qs = $_POST["qs$qn"] ?? '';
 	if ($qs=='DNE') {
 		$givenans = "DNE";
 	} else if ($qs=='inf') {

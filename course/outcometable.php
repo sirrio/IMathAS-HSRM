@@ -90,7 +90,7 @@ function flattenitems($items,&$addto,&$itemidsection,$sec='') {
                     $ishidden = true;
                 }
             } 
-			if (!$ishidden) {
+			if (!$ishidden && !empty($item['items'])) {
 				flattenitems($item['items'], $addto, $itemidsection, $thissec);
 			}
 		} else {
@@ -158,6 +158,7 @@ function outcometable() {
 	}
 
 	//Build user ID headers
+    $gb[0][0] = [];
 	$gb[0][0][0] = "Name";
 	$stm = $DBH->prepare("SELECT count(id) FROM imas_students WHERE imas_students.courseid=:courseid AND imas_students.section IS NOT NULL");
 	$stm->execute(array(':courseid'=>$cid));
@@ -167,6 +168,7 @@ function outcometable() {
 		$hassection = false;
 	}
 	//Pull Assessment Info
+    $gb[0][1] = [];
 	$now = time();
 	$query = "SELECT id,name,defpoints,deffeedback,timelimit,minscore,startdate,enddate,LPcutoff,itemorder,gbcategory,cntingb,avail,groupsetid,defoutcome,allowlate,viewingb,scoresingb,ver FROM imas_assessments WHERE courseid=:courseid AND avail>0 ";
 	$query .= "AND cntingb>0 AND cntingb<3 ";
@@ -320,7 +322,7 @@ function outcometable() {
 	}
 
 		//Pull Discussion Grade info
-	$query = "SELECT id,name,gbcategory,startdate,enddate,replyby,postby,points,cntingb,avail FROM imas_forums WHERE courseid=:courseid AND points>0 AND avail>0 ";
+	$query = "SELECT id,name,gbcategory,startdate,enddate,replyby,postby,points,cntingb,avail,outcomes FROM imas_forums WHERE courseid=:courseid AND points>0 AND avail>0 ";
 	$query .= "AND startdate<:now AND outcomes<>'' ";
 	$qarr = array(':courseid'=>$cid, ':now'=>$now);
 
@@ -519,6 +521,7 @@ function outcometable() {
 	//create category headers
 	$pos = 0;
 	$catorder = array_keys($cats);
+    $gb[0][2] = [];
 	foreach($catorder as $cat) {//foreach category
         if (isset($cats[$cat][6]) && $cats[$cat][6]==1) {//hidden
             continue;
@@ -938,13 +941,13 @@ function outcometable() {
 				foreach ($itemoutcome[$i] as $oc) {
 
 					if ($l['score']!=null) {
-						if (isset($gb[$row][1][$col][0])) {
+						if (isset($gb[$row][1][$col][0][$oc])) {
 							$gb[$row][1][$col][0][$oc] += 1*$l['score']; //adding up all forum scores
 						} else {
 							$gb[$row][1][$col][0][$oc] = 1*$l['score'];
 						}
+                        $gb[$row][1][$col][1][$oc] = $possible[$i];
 					}
-
 					if ($gb[0][1][$col][2]<1) { //past
 						$cattotpast[$row][$category[$i]][$oc][$col] = $gb[$row][1][$col][0];
 						$catposspast[$row][$category[$i]][$oc][$col] = $possible[$i];
@@ -1072,6 +1075,7 @@ function outcometable() {
 			}
 		}
 	}
+
 	if ($limuser<1) {
 		$gb[$ln][0][0] = "Averages";
 		$gb[$ln][0][1] = -1;

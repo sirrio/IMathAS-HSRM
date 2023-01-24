@@ -10,6 +10,8 @@ if (isset($CFG['hooks']['admin/actions'])) {
 	require($CFG['hooks']['admin/actions']);
 }
 
+if (!isset($_POST['action'])) { exit; }
+
 $from = 'admin';
 if (isset($_GET['from'])) {
 	if ($_GET['from']=='home') {
@@ -561,7 +563,7 @@ switch($_POST['action']) {
 			$toolset = 1*!isset($_POST['toolset-cal']) + 2*!isset($_POST['toolset-forum']) + 4*!isset($_POST['toolset-reord']);
 		}
 
-		$avail = 1 - $_POST['stuavail'];
+		$avail = isset($_POST['stuavail']) ? 0 : 1;//1 - $_POST['stuavail'];
 
 		$istemplate = 0;
 		if (($myspecialrights&1)==1 || $myrights==100) {
@@ -625,6 +627,7 @@ switch($_POST['action']) {
 
 			$browserdata = array();
 			foreach ($browserprops as $propname=>$propvals) {
+                if (!empty($propvals['fixed'])) { continue; }
 				if (!empty($propvals['required']) && trim($_POST['browser'.$propname]) == '' &&
 					!($propvals['required']==2 && ($istemplate&3)>0)) {
 					$isok = false;
@@ -639,7 +642,7 @@ switch($_POST['action']) {
 				} else { //single val
 					$browserdata[$propname] = Sanitize::stripHtmlTags($_POST['browser'.$propname]);
 				}
-				if ($_POST['browser'.$propname]=='other') {
+				if (isset($_POST['browser'.$propname]) && $_POST['browser'.$propname]=='other') {
 					$browserdata[$propname.'other'] = Sanitize::stripHtmlTags($_POST['browser'.$propname.'other']);
 				}
 			}
@@ -901,6 +904,7 @@ switch($_POST['action']) {
 					}
 					function updateoutcomes(&$arr) {
 						global $outcomes;
+                        if (!is_array($arr)) { return; }
 						foreach ($arr as $k=>$v) {
 							if (is_array($v)) {
 								updateoutcomes($arr[$k]['outcomes']);
@@ -910,6 +914,9 @@ switch($_POST['action']) {
 						}
 					}
 					$outcomesarr = unserialize($outcomesarr);
+                    if ($outcomesarr === false) {
+                        $outcomesarr = [];
+                    }
 					updateoutcomes($outcomesarr);
 					$newoutcomearr = serialize($outcomesarr);
 				} else {
@@ -920,6 +927,7 @@ switch($_POST['action']) {
 				$newitems = array();
 				require("../includes/copyiteminc.php");
 				$convertAssessVer = $destUIver;
+                $_POST['ctc'] = $_POST['usetemplate'];
 				copyallsub($items,'0',$newitems,$gbcats);
 				doaftercopy($_POST['usetemplate'], $newitems);
 				$itemorder = serialize($newitems);

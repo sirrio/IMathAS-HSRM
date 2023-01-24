@@ -18,18 +18,21 @@ function parseMath($str, $vars = '', $allowedfuncs = array(), $fvlist = '') {
   return $parser;
 }
 
-function parseMathQuiet($str, $vars = '', $allowedfuncs = array(), $fvlist = '') {
+function parseMathQuiet($str, $vars = '', $allowedfuncs = array(), $fvlist = '', $hideerrors=false) {
+  if (trim($str)=='') {
+    return false;
+  }
   try {
     $parser = new MathParser($vars, $allowedfuncs, $fvlist);
     $parser->parse($str);
   } catch (Throwable $t) {
-    if ($GLOBALS['myrights'] > 10) {
+    if ($GLOBALS['myrights'] > 10 && !$hideerrors) {
       echo "Parse error on: ".Sanitize::encodeStringForDisplay($str);
       echo ". Error: ".$t->getMessage();
     }
     return false;
   } catch (Exception $t) { //fallback for PHP5
-    if ($GLOBALS['myrights'] > 10) {
+    if ($GLOBALS['myrights'] > 10 && !$hideerrors) {
       echo "Parse error on: ".Sanitize::encodeStringForDisplay($str);
       echo ". Error: ".$t->getMessage();
     }
@@ -53,7 +56,7 @@ function parseMathQuiet($str, $vars = '', $allowedfuncs = array(), $fvlist = '')
  * @param string $fvlist comma separated list of variables to treat as functions
  * @return function
  */
-function makeMathFunction($str, $vars = '', $allowedfuncs = array(), $fvlist = '') {
+function makeMathFunction($str, $vars = '', $allowedfuncs = array(), $fvlist = '', $hideerrors=false) {
   if (trim($str)=='') {
     return false;
   }
@@ -61,13 +64,13 @@ function makeMathFunction($str, $vars = '', $allowedfuncs = array(), $fvlist = '
     $parser = new MathParser($vars, $allowedfuncs, $fvlist);
     $parser->parse($str);
   } catch (Throwable $t) {
-    if ($GLOBALS['myrights'] > 10) {
+    if ($GLOBALS['myrights'] > 10 && (!empty($GLOBALS['inQuestionTesting']) || !$hideerrors)) {
       echo "Parse error on: ".Sanitize::encodeStringForDisplay($str);
       echo ". Error: ".$t->getMessage();
     }
     return false;
   } catch (Exception $t) { //fallback for PHP5
-    if ($GLOBALS['myrights'] > 10) {
+    if ($GLOBALS['myrights'] > 10 && (!empty($GLOBALS['inQuestionTesting']) || !$hideerrors)) {
       echo "Parse error on: ".Sanitize::encodeStringForDisplay($str);
       echo ". Error: ".$t->getMessage();
     }
@@ -91,6 +94,7 @@ function makeMathFunction($str, $vars = '', $allowedfuncs = array(), $fvlist = '
  * @return float
  */
 function evalMathParser($str) {
+  if (trim($str) === '') { return sqrt(-1); } // avoid errors on blank
   try {
     $parser = new MathParser('');
     $parser->parse($str);
@@ -123,6 +127,7 @@ class MathParser
   private $funcregex = '';
   private $numvarregex = '';
   private $variableValues = [];
+  private $origstr = '';
 
   /**
    * Construct the parser
@@ -253,6 +258,7 @@ class MathParser
    * @return array  Builds syntax tree in class, but also returns it
    */
   public function parse($str) {
+    $this->origstr = $str;
     $str = preg_replace('/(ar|arg)(sinh|cosh|tanh|sech|csch|coth)/', 'arc$2', $str);
     $str = str_replace(array('\\','[',']','`'), array('','(',')',''), $str);
     // attempt to handle |x| as best as possible
@@ -284,6 +290,9 @@ class MathParser
       }
     }
     $this->variableValues = $variableValues;
+    if (empty($this->AST)) {
+        return '';
+    }
     return $this->evalNode($this->AST);
   }
 
@@ -387,7 +396,10 @@ class MathParser
         // look to see if the symbol is in our list of variables and functions
         if (preg_match($this->regex, substr($str,$n), $matches)) {
           $nextSymbol = $matches[1];
-          if (in_array($nextSymbol, $this->funcvariables)) {
+          if (in_array($nextSymbol, $this->funcvariables) &&
+            strlen($str) > $n+strlen($nextSymbol) &&
+            $str[$n+strlen($nextSymbol)] == '('
+          ) {
             // found a variable acting as a function 
             $tokens[] = [
               'type'=>'function',
@@ -464,7 +476,7 @@ class MathParser
               }
             } else if ($nextSymbol == 'root') {
               // found a root.  Parse the index
-              if (preg_match('/^[\(\[]?(\d+)[\)\]]?/', substr($str,$n+1), $sub)) {
+              if (preg_match('/^[\(\[]?(-?\d+)[\)\]]?/', substr($str,$n+1), $sub)) {
                 // replace the last node with an nthroot node
                 $tokens[count($tokens)-1] = [
                   'type' => 'function',
@@ -575,7 +587,7 @@ class MathParser
         if ($unary) { //treat as logical not
           $token['symbol'] = 'not';
           $this->operatorStack[] = $token;
-          if ($this->tokens[$tokenindex+1]['symbol']=='*') {
+          if (isset($this->tokens[$tokenindex+1]) && $this->tokens[$tokenindex+1]['symbol']=='*') {
             //remove implicit multiplication
             unset($this->tokens[$tokenindex+1]);
           }
@@ -728,14 +740,20 @@ class MathParser
         $node = array_pop($this->operatorStack); //this is the function node
         $operand = array_pop($this->operandStack);
         if ($node['symbol'] == 'log_') {
+          if ($operand === null) {
+            throw new MathParserException("Syntax error - missing index");
+          }
           $node['symbol'] = 'log';
           $node['index'] = $operand;
           $this->operatorStack[] = $node;
-          if ($this->tokens[$tokenindex+1]['symbol'] == '*') {
+          if (isset($this->tokens[$tokenindex+1]) && $this->tokens[$tokenindex+1]['symbol'] == '*') {
             unset($this->tokens[$tokenindex+1]); // remove implicit mult
           };
           return;
         } else {
+          if ($operand === null) {
+            throw new MathParserException("Syntax error - missing function input");
+          }
           $node['input'] = $operand;  // assign argument to function
         }
         if (strpos($node['symbol'], '^') !== false) { // if it's sin^2, transform now
@@ -768,6 +786,11 @@ class MathParser
    * @return float Value of the node
    */
   private function evalNode($node) {
+    if (empty($node)) {
+        error_log("evaluate empty node error on str " . $this->origstr);
+        throw new MathParserException("Cannot evaluate an empty expression");
+        return;
+    }
     if ($node['type'] === 'number') {
       return floatval($node['symbol']);
     } else if ($node['type'] === 'variable') {
@@ -1211,7 +1234,7 @@ class MathParser
         // add node to collection.
         $node['left'] = $this->normalizeNode($node['left']);
         // build string for comparison
-        $node['left']['string'] = $this->toString($node['left']);
+        $node['left']['string'] = (string) $this->toString($node['left']);
         $collection[] = $node['left'];
       }
       if ($node['right']['symbol'] == $sym1 || $node['right']['symbol'] == $sym2) {
@@ -1220,7 +1243,7 @@ class MathParser
       } else {
         // add node to collection
         $node['right']= $this->normalizeNode($node['right']);
-        $node['right']['string'] = $this->toString($node['right']);
+        $node['right']['string'] = (string) $this->toString($node['right']);
         $collection[] = $node['right'];
       }
     }
@@ -1298,9 +1321,13 @@ function factorial($x) {
 }
 
 function nthroot($x,$n) {
-	if ($n%2==0 && $x<0) { //if even root and negative base
-    throw new MathParserException("Can't take even root of negative value");
-	} else if ($x<0) { //odd root of negative base - negative result
+	if ($x==0) {
+      return 0;
+    } else if ($n%2==0 && $x<0) { //if even root and negative base
+      throw new MathParserException("Can't take even root of negative value");
+	} else if ($n==0) {
+      throw new MathParserException("Can't take 0th root");
+    } else if ($x<0) { //odd root of negative base - negative result
 		return -1*exp(1/$n*log(abs($x)));
 	} else { //root of positive base
 		return exp(1/$n*log(abs($x)));
@@ -1319,6 +1346,9 @@ function safepow($base,$power) {
     } else {
       return 0;
     }
+  }
+  if (!is_numeric($base) || !is_numeric($power)) {
+    throw new MathParserException("cannot evaluate powers with nonnumeric values");
   }
 	if ($base<0 && floor($power)!=$power) {
 		for ($j=3; $j<50; $j+=2) {

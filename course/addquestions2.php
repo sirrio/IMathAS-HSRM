@@ -129,7 +129,7 @@ if (!(isset($teacherid))) { // loaded by a NON-teacher
 			$stm->execute(array(':itemorder'=>$itemorder, ':viddata'=>$viddata, ':id'=>$aid));
 
 			require_once("../includes/updateptsposs.php");
-			updatePointsPossible($aid, $itemorder, $row['defpoints']);
+			updatePointsPossible($aid, $itemorder, $row[2]);
 
 			header('Location: ' . $GLOBALS['basesiteurl'] . "/course/addquestions2.php?cid=$cid&aid=$aid&r=" .Sanitize::randomQueryStringParam());
 			exit;
@@ -384,8 +384,8 @@ if (!(isset($teacherid))) { // loaded by a NON-teacher
 		var addqaddr = '$address';
         var assessver = '$aver';
 		</script>";
-    $placeinhead .= "<script type=\"text/javascript\" src=\"$staticroot/javascript/addqsort2.js?v=062522\"></script>";
-    $placeinhead .= "<script type=\"text/javascript\" src=\"$staticroot/javascript/qsearch.js?v=041422\"></script>";
+    $placeinhead .= "<script type=\"text/javascript\" src=\"$staticroot/javascript/addqsort2.js?v=011923\"></script>";
+    $placeinhead .= "<script type=\"text/javascript\" src=\"$staticroot/javascript/qsearch.js?v=011923\"></script>";
     $placeinhead .= "<script type=\"text/javascript\" src=\"$staticroot/javascript/junkflag.js\"></script>";
     $placeinhead .= "<script type=\"text/javascript\" src=\"$staticroot/javascript/DatePicker.js?v=080818\"></script>";
 	$placeinhead .= "<script type=\"text/javascript\">var JunkFlagsaveurl = '". $GLOBALS['basesiteurl'] . "/course/savelibassignflag.php';</script>";
@@ -450,6 +450,8 @@ if (!(isset($teacherid))) { // loaded by a NON-teacher
         } else {
             $searchin = [$userdeflib];
         }
+        $_SESSION['searchin'.$aid] = $searchin;
+        $_SESSION['lastsearchlibs'.$aid] = implode(',', $searchin);
     } else {
         $searchin = [];
     }
@@ -699,6 +701,7 @@ if ($overwriteBody==1) {
                             <option value="calcinterval">Calculated Interval</option>
                             <option value="complex">Complex</option>
                             <option value="calccomplex">Calculated Complex</option>
+							<option value="chemeqn">Chemical Equation</option>
                             <option value="file">File Upload</option>
                             <option value="multipart">Multipart</option>
                             <option value="conditional">Conditional</option>
@@ -721,6 +724,7 @@ if ($overwriteBody==1) {
                     <p><label><input type=checkbox id="search-mine"><?php echo _('Mine Only');?></label> 
                         <label><input type=checkbox id="search-unused"><?php echo _('Exclude Added');?></label> 
                         <label><input type=checkbox id="search-newest"><?php echo _('Newest First');?></label> 
+                        <label><input type=checkbox id="search-nounrand"><?php echo _('Exclude non-randomized');?></label> 
                     </p>
                     <p><?php echo _('Helps');?>: 
                         <label><input type=checkbox id="search-res-help" value="help"><?php echo _('Resource');?></label> 

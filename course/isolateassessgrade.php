@@ -49,7 +49,7 @@
     if ($isteacher || ($istutor && $tutoredit == 3)) {
         if ((isset($_POST['posted']) && $_POST['posted']=="Make Exception") || isset($_GET['massexception'])) {
             $calledfrom='isolateassess';
-            $_POST['checked'] = $_POST['stus'];
+            $_POST['checked'] = $_POST['stus'] ?? [];
             $_POST['assesschk'] = array($aid);
 			include("massexception.php");
         }
@@ -262,7 +262,9 @@
 		if ($aver > 1 && ($line['status']&1)>0) {
 			// identify as unsubmitted if past due, or time limit is expired
 			$data = json_decode(gzdecode($line['scoreddata']), true);
-			$time_exp = $data['assess_versions'][count($data['assess_versions'])-1]['timelimit_end'];
+            if (abs($timelimit) > 0) {
+			    $time_exp = $data['assess_versions'][count($data['assess_versions'])-1]['timelimit_end'];
+            }
 			if ($now > $line['thisenddate'] ||
 				(abs($timelimit) > 0 && $now > $time_exp + $overtime_grace * $line['timelimitmult'])
 			) {
@@ -353,7 +355,8 @@
 			$total = $line['score'];
 			$timeused = $line['lastchange'] - $line['starttime'];
 			$timeontask = round($line['timeontask']/60,1);
-            $isOvertime = ($line['status']&4) == 4;
+            // don't display OT marker anymore for new assess
+            //$isOvertime = ($line['status']&4) == 4;
             $IP = 0;
             $UA = 0;
             if (($line['status']&1)>0 && ($line['thisenddate']<$now ||  //unsubmitted by-assess, and due date passed
@@ -381,7 +384,7 @@
 			$UA = 0;
 		}
 
-		if ($line['starttime']==null) {
+		if ($line['starttime']===null) {
 			if ($aver > 1) {
 				$querymap = array(
 					'gbmode' => $gbmode,
@@ -454,7 +457,7 @@
 				echo "&nbsp;(IP)";
 			} else 	if ($UA==1) {
 				echo "&nbsp;(UA)";
-			} else	if ($isOvertime) {
+			} else	if (!empty($isOvertime)) {
 				echo "&nbsp;(OT)";
 			} else if ($assessmenttype=="Practice") {
 				echo "&nbsp;(PT)";
@@ -572,12 +575,18 @@
     }
     echo "<td>$timeavg</td><td></td></tr>";
 	echo "</tbody></table>";
+	
+	if ($includeduedate) {
+        $duedatesort = ",'D'";
+    } else {
+        $duedatesort = '';
+    }
 	if ($hassection && !$hidesection && $hascodes && !$hidecode) {
-		echo "<script> initSortTable('myTable',Array('S','S','S','N','P','D'),true,false);</script>";
+		echo "<script> initSortTable('myTable',Array('S','S','S','N','P','D'$duedatesort,'N','S'),true,false);</script>";
 	} else if ($hassection && !$hidesection) {
-		echo "<script> initSortTable('myTable',Array('S','S','N','P','D'),true,false);</script>";
+		echo "<script> initSortTable('myTable',Array('S','S','N','P','D'$duedatesort,'N','S'),true,false);</script>";
 	} else {
-		echo "<script> initSortTable('myTable',Array('S','N','P','D'),true,false);</script>";
+		echo "<script> initSortTable('myTable',Array('S','N','P','D'$duedatesort,'N','S'),true,false);</script>";
 	}
 	echo "<p>Meanings:  <i>italics</i>-available to student, IP-In Progress (some questions unattempted), UA-Unsubmitted attempt, OT-overtime, PT-practice test, EC-extra credit, NC-no credit<br/>";
 	echo "<sup>e</sup> Has exception, <sup>x</sup> Excused grade, <sup>LP</sup> Used latepass  </p>\n";

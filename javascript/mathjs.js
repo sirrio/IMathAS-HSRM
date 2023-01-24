@@ -32,6 +32,7 @@ var tann = function(n,x) {return Math.pow(Math.tan(x),n)};
 var cscn = function(n,x) {return 1/Math.pow(Math.sin(x),n)};
 var secn = function(n,x) {return 1/Math.pow(Math.cos(x),n)};
 var cotn = function(n,x) {return 1/Math.pow(Math.tan(x),n)};
+var lnn = function(n,x) {return Math.pow(Math.log(x),n)};
 
 function factorial(x,n) {
   if (n==null) n=1;
@@ -56,7 +57,7 @@ function nthroot(n,base) {
 function nthlogten(n,v) {
 	return ((Math.log(v))/(Math.log(n)));
 }
-var funcstoindexarr = "sinh|cosh|tanh|sech|csch|coth|sqrt|ln|log|exp|sin|cos|tan|sec|csc|cot|abs|root|arcsin|arccos|arctan|arcsec|arccsc|arccot|arcsinh|arccosh|arctanh|arcsech|arccsch|arccoth|argsinh|argcosh|argtanh|argsech|argcsch|argcoth|arsinh|arcosh|artanh|arsech|arcsch|arcoth".split("|");
+var funcstoindexarr = "sinh|cosh|tanh|sech|csch|coth|sqrt|ln|log|exp|sin|cos|tan|sec|csc|cot|abs|root|arcsin|arccos|arctan|arcsec|arccsc|arccot|arcsinh|arccosh|arctanh|arcsech|arccsch|arccoth|argsinh|argcosh|argtanh|argsech|argcsch|argcoth|arsinh|arcosh|artanh|arsech|arcsch|arcoth|pi".split("|");
 function functoindex(match) {
 	for (var i=0;i<funcstoindexarr.length;i++) {
 		if (funcstoindexarr[i]==match) {
@@ -99,6 +100,7 @@ function mathjs(st,varlist) {
   st = st.replace(/(\+\s*-|-\s*\+)/g,'-').replace(/-\s*-/g,'+');
   st = st.replace("[","(");
   st = st.replace("]",")");
+  st = st.replace(/\b00+\./g,'0.');
   st = st.replace(/root\s*(\d+)/,"root($1)");
   st = st.replace(/\|(.*?)\|/g,"abs($1)");
   st = st.replace(/arc(sin|cos|tan|sec|csc|cot|sinh|cosh|tanh|sech|csch|coth)/gi,"$1^-1");
@@ -155,8 +157,8 @@ function mathjs(st,varlist) {
   st = st.replace(/log_(\(@v\d+@\))\s*\(/g,"nthlog($1,");
   st = st.replace(/log/g,"logten");
   st = st.replace(/(sin|cos|tan|sec|csc|cot|sinh|cosh|tanh|sech|csch|coth)\^(-1|\(-1\))/g,"arc$1");
-  st = st.replace(/(sin|cos|tan|sec|csc|cot)\^(\d+)\s*\(/g,"$1n($2,");
-  st = st.replace(/(sin|cos|tan|sec|csc|cot)\^\((\d+)\)\s*\(/g,"$1n($2,");
+  st = st.replace(/(sin|cos|tan|sec|csc|cot|ln)\^(\d+)\s*\(/g,"$1n($2,");
+  st = st.replace(/(sin|cos|tan|sec|csc|cot|ln)\^\((\d+)\)\s*\(/g,"$1n($2,");
   st = st.replace(/root\s*\((\d+)\)\s*\(/g,"nthroot($1,");
 
   //add implicit mult for "3 4"

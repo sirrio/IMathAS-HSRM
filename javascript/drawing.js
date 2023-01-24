@@ -40,6 +40,7 @@
 	5.4:  vector
 	6: parabola
 	6.1: horiz parabola
+	6.2: half parabola
 	6.3: cubic
 	6.5: square root
 	6.6: cube root
@@ -243,6 +244,7 @@ function addA11yTarget(canvdata, thisdrawla, imgpath) {
 			"horizparab": [{"mode":6.1, "descr":_("Parabola opening right or left"), inN: 2, "input":_("Enter the vertex, then another point on the parabola")}],
 			"halfparab": [{"mode":6.2, "descr":_("Half Parabola"), inN: 2, "input":_("Enter the vertex, then another point on the half parabola")}],
 			"cubic": [{"mode":6.3, "descr":_("Cubic"), inN: 2, "input":_("Enter the inflection point, then another point on the cubic")}],
+			"sqrt": [{"mode":6.5, "descr":_("Square root"), inN: 2, "input":_("Enter the starting point of the square root, then another point on the graph")}],			
 			"cuberoot": [{"mode":6.6, "descr":_("Cube root"), inN: 2, "input":_("Enter the inflection point of the cube root, then another point on the graph")}],
 			"abs": [{"mode":8, "descr":_("Absolute value"), inN: 2, "input":_("Enter the corner point of the absolute value, then another point on the graph")}],
 			"rational": [{"mode":8.2, "descr":_("Rational"), inN: 2, "input":_("Enter the point where the vertical and horizontal asymptote cross, then a point on the graph")}],
@@ -469,6 +471,7 @@ function encodea11ydraw(qn) {
 		$("#a11ydraw"+tarnum).find(".a11ydrawrow").each(function(i,el) {
             var input = $(el).find("input").val();
             var mode = el.getAttribute('data-mode');
+            var expectedn = $(el).find("input").attr('data-n');
 			saveinput.push("["+mode+',"'+input+'"]');
 			input = input.replace(/[\(\)]/g,'').split(/\s*,\s*/);
 			var outpts = [];
@@ -489,6 +492,9 @@ function encodea11ydraw(qn) {
 				outpts.push(Math.round(input[i-1])+','+Math.round(input[i]));
                 outptsraw.push([input[i-1], input[i]]);
 			}
+            if (expectedn !== 'list' && expectedn != outpts.length) {
+                return;
+            }
 			if (mode==1) {
 				encdots.push('('+outpts.join('),(')+')');
                 dots[tarnum].push(outptsraw);
@@ -498,11 +504,11 @@ function encodea11ydraw(qn) {
 			} else if (mode<1) {
 				enclines.push('('+outpts.join('),(')+')');
                 lines[tarnum].push(outptsraw);
-			} else if (mode>=5 && mode<10 && outpts.length==2) {
+			} else if (mode>=5 && mode<10) {
 				enctplines.push('('+mode+','+outpts.join(',')+')');
                 tplines[tarnum].push(outptsraw);
                 tptypes[tarnum].push(mode);
-			} else if (mode>=10 && outpts.length==3) {
+			} else if (mode>=10) {
 				enctpineq.push('('+mode+','+outpts.join(',')+')');
                 ineqlines[tarnum].push(outptsraw);
                 ineqtypes[tarnum].push(mode);

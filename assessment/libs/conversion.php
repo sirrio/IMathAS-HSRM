@@ -20,7 +20,7 @@
 
 function conversionVer() {
 	// File version
-	return 23;
+	return 26.3;
 }
 
 global $allowedmacros;
@@ -402,8 +402,8 @@ function get_unit_weight_abbreviations() {
 
     // Metric
     $unitabbr["Kilogram"] = _("kg");
-    $unitabbr["Hectogram"] = _("hc");
-    $unitabbr["Dekagram"] = _("dac");
+    $unitabbr["Hectogram"] = _("hg");
+    $unitabbr["Dekagram"] = _("dag");
     $unitabbr["Gram"] = _("g");
     $unitabbr["Decigram"] = _("dg");
     $unitabbr["Centigram"] = _("cg");
@@ -894,7 +894,7 @@ function conversionAbbreviations() {
             $retval[1] = $unit["Centimeter"]." = ".$unitabbr["Centimeter"];
             $retval[2] = $unit["Decimeter"]." = ".$unitabbr["Decimeter"];
             $retval[3] = $unit["Meter"]." = ".$unitabbr["Meter"];
-            $retval[4] = $unit["Dekameter"]." = ".conversionUnits2ScreenReader1("",$unitabbr["Meter"],1,"n");
+            $retval[4] = $unit["Dekameter"]." = ".conversionUnits2ScreenReader1("",$unitabbr["Dekameter"],1,"n");
             $retval[5] = $unit["Hectometer"]." = ".$unitabbr["Hectometer"];
             $retval[6] = $unit["Kilometer"]." = ".$unitabbr["Kilometer"];
         } elseif($type=="Capacity"){
@@ -914,7 +914,7 @@ function conversionAbbreviations() {
 
             $retval[0] = $unit["Milligram"]." = ".$unitabbr["Milligram"];
             $retval[1] = $unit["Centigram"]." = ".$unitabbr["Centigram"];
-            $retval[2] = $unit["Decigram"]." = ".$unit["Decigram"];
+            $retval[2] = $unit["Decigram"]." = ".$unitabbr["Decigram"];
             $retval[3] = $unit["Gram"]." = ".$unitabbr["Gram"];
             $retval[4] = $unit["Dekagram"]." = ".conversionUnits2ScreenReader1("",$unitabbr["Dekagram"],1,"n");
             $retval[5] = $unit["Hectogram"]." = ".$unitabbr["Hectogram"];
@@ -1132,10 +1132,13 @@ function conversionArea2() {
             $retval[2] = array("",1,$quote.$unitabbr["acre"].$quote, 43560, $unitabbr["feet"]);
             $retval[3] = array("",1,$unitabbr["mile"],640,$quote.$unitabbr["acre"].$quote);
             $html = "y";
-            for($i=0;$i<4;$i+=1){
+            for($i=0;$i<2;$i+=1){
                 if($i>0) {$html = "n";}
                 $retval[$i][0] = conversionUnits2ScreenReader2($retval[$i][1],$retval[$i][2],2,number_format($retval[$i][3]),$retval[$i][4],2,"=",$tick,$html);
             }
+            $retval[2][0] = conversionUnits2ScreenReader2($retval[2][1],$retval[2][2],1,number_format($retval[2][3]),$retval[2][4],2,"=",$tick,$html);
+            $retval[3][0] = conversionUnits2ScreenReader2($retval[3][1],$retval[3][2],2,number_format($retval[3][3]),$retval[3][4],1,"=",$tick,$html);
+
         } else {
             $retval[0] = array("",1,$unit["feet squared"], 144, $unit["inches squared"]);
             $retval[1] = array("",1,$unit["yard squared"], 9, $unit["feet squared"]);
@@ -1154,12 +1157,12 @@ function conversionArea2() {
         #region Metric Conversion
 
         if($fullname==0 || $fullname==3) {
-            $retval[0] = array("",1,$unitabbr["Kilometer"],1000,$unitabbr["Hectometer"]);
+            $retval[0] = array("",1,$unitabbr["Kilometer"],100,$unitabbr["Hectometer"]);
             $retval[1] = array("",1,$unitabbr["Hectometer"],100,$unitabbr["Dekameter"]);
             $retval[2] = array("",1,$unitabbr["Dekameter"],100,$unitabbr["Meter"]);
             $retval[3] = array("",1,$unitabbr["Meter"],100,$unitabbr["Decimeter"]);
             $retval[4] = array("",1,$unitabbr["Decimeter"],100,$unitabbr["Centimeter"]);
-            $retval[5] = array("",1,$unitabbr["Centimeter"],1000,$unitabbr["Millimeter"]);
+            $retval[5] = array("",1,$unitabbr["Centimeter"],100,$unitabbr["Millimeter"]);
             $retval[6] = array("",1,$unitabbr["Ares"],100,$unitabbr["Meter"]);
             $retval[7] = array("",1,$unitabbr["Hectares"],100,$unitabbr["Ares"]);
             $html = "y";
@@ -1167,28 +1170,28 @@ function conversionArea2() {
                 if($i>0) {$html = "n";}
                 $retval[$i][0] = conversionUnits2ScreenReader2($retval[$i][1],$retval[$i][2],2,number_format($retval[$i][3]),$retval[$i][4],2,"=",$tick,$html);
             }
-            $retval[6][0] = "{$retval[6][1]} {$retval[6][2]} = {$retval[6][3]} {$retval[6][4]}";
+            $retval[6][0] = conversionUnits2ScreenReader2($retval[6][1],$retval[6][2],1,number_format($retval[6][3]),$retval[6][4],2,"=",$tick,$html);
             $retval[7][0] = "{$retval[7][1]} {$retval[7][2]} = {$retval[7][3]} {$retval[7][4]}";
 
         } elseif($fullname==1) {
-            $retval[0] = array("",1,$unit["Kilometer squared"],1000,$unit["Hectometer squared"]);
+            $retval[0] = array("",1,$unit["Kilometer squared"],100,$unit["Hectometer squared"]);
             $retval[1] = array("",1,$unit["Hectometer squared"],100,$unit["Dekameter squared"]);
             $retval[2] = array("",1,$unit["Dekameter squared"],100,$unit["Meter squared"]);
             $retval[3] = array("",1,$unit["Meter squared"],100,$unit["Decimeter squared"]);
             $retval[4] = array("",1,$unit["Decimeter squared"],100,$unit["Centimeter squared"]);
-            $retval[5] = array("",1,$unit["Centimeter squared"],1000,$unit["Millimeter squared"]);
+            $retval[5] = array("",1,$unit["Centimeter squared"],100,$unit["Millimeter squared"]);
             $retval[6] = array("",1,$unit["Ares"],100,$unit["Meter squared"]);
             $retval[7] = array("",1,$unit["Hectares"],100,$unit["Ares"]);
             for($i=0;$i<8;$i+=1){
                 $retval[$i][0] = "{$retval[$i][1]} {$retval[$i][2]} = ".number_format($retval[$i][3])." {$retval[$i][4]}";
             }
         } else  {
-            $retval[0] = array("",1,$unit["Square kilometer"],1000,$unit["Square hectometer"]);
+            $retval[0] = array("",1,$unit["Square kilometer"],100,$unit["Square hectometer"]);
             $retval[1] = array("",1,$unit["Square hectometer"],100,$unit["Square dekameter"]);
             $retval[2] = array("",1,$unit["Square dekameter"],100,$unit["Square meter"]);
             $retval[3] = array("",1,$unit["Square meter"],100,$unit["Square decimeter"]);
             $retval[4] = array("",1,$unit["Square decimeter"],100,$unit["Square centimeter"]);
-            $retval[5] = array("",1,$unit["Square centimeter"],1000,$unit["Square millimeter"]);
+            $retval[5] = array("",1,$unit["Square centimeter"],100,$unit["Square millimeter"]);
             $retval[6] = array("",1,$unit["Ares"],100,$unit["Meter squared"]);
             $retval[7] = array("",1,$unit["Hectares"],100,$unit["Ares"]);
             for($i=0;$i<8;$i+=1){
@@ -1362,17 +1365,17 @@ function conversionCapacity2() {
 		if($fullname==0) {
             $retval[0] = array("",1,$unitabbr["Kiloliter"],1000,$unitabbr["Liter"]);
             $retval[1] = array("",1,$unitabbr["Hectoliter"],100,$unitabbr["Liter"]);
-            $retval[2] = array("",1,conversionUnits2ScreenReader1("1 ",$unitabbr["Dekaliter"],1,"n"),10,$unitabbr["Liter"]);
+            $retval[2] = array("",1,conversionUnits2ScreenReader1("",$unitabbr["Dekaliter"],1,"n"),10,$unitabbr["Liter"]);
             $retval[3] = array("",1,$unitabbr["Liter"],10,$unitabbr["Deciliter"]);
             $retval[4] = array("",1,$unitabbr["Liter"],100,$unitabbr["Centiliter"]);
-            $retval[5] = array("",1,$unitabbr["Liter"],100,$unitabbr["Milliliter"]);
+            $retval[5] = array("",1,$unitabbr["Liter"],1000,$unitabbr["Milliliter"]);
         } else {
             $retval[0] = array("",1,$unit["Kiloliter"],1000,$unit["Liter"]);
-            $retval[1] = array("",1,$unit["Hectoliter"],100,$unitabbr["Liter"]);
+            $retval[1] = array("",1,$unit["Hectoliter"],100,$unit["Liter"]);
             $retval[2] = array("",1,$unit["Dekaliter"],10,$unit["Liter"]);
             $retval[3] = array("",1,$unit["Liter"],10,$unit["Deciliter"]);
             $retval[4] = array("",1,$unit["Liter"],100,$unit["Centiliter"]);
-            $retval[5] = array("",1,$unit["Liter"],100,$unit["Milliliter"]);
+            $retval[5] = array("",1,$unit["Liter"],1000,$unit["Milliliter"]);
         }
         for($i=0;$i<6;$i+=1){
             $retval[$i][0] = "{$retval[$i][1]} {$retval[$i][2]} $sign {$retval[$i][3]} {$retval[$i][4]}";
@@ -1668,7 +1671,7 @@ function conversionFormulaGeometry() {
         $retval[0] = "{$tick}SA=2LW+2LH+2WH{$tick} "._("(Surface Area of a Rectangular Solid)");
         $retval[1] = "{$tick}SA=6 s^2{$tick} "._("(Surface Area of a Cube)");
         $retval[2] = "{$tick}SA=4{$PI}r^2{$tick} "._("(Surface Area of a Sphere)");
-        $retval[3] = "{$tick}SA=2{$PI}rh+4{$PI}r^2{$tick} "._("(Surface Area of a Right Circular Cylinder)");
+        $retval[3] = "{$tick}SA=2{$PI}rh+2{$PI}r^2{$tick} "._("(Surface Area of a Right Circular Cylinder)");
     } elseif($type=="Volume") {
         $retval[0] = "{$tick}V = LWH{$tick} "._("(Volume of a Rectangular Solid)");
         $retval[1] = "{$tick}V = s^3{$tick} "._("(Volume of a Cube)");
@@ -1837,7 +1840,7 @@ function conversionLength2() {
         if($fullname==0) {
             $retval[0] = array("",1,$unitabbr["Kilometer"],1000,$unitabbr["Meter"]);
             $retval[1] = array("",1,$unitabbr["Hectometer"],100,$unitabbr["Meter"]);
-            $retval[2] = array("",1,conversionUnits2ScreenReader1("1 ",$unitabbr["Dekameter"],1,"n"),10,$unitabbr["Meter"]);
+            $retval[2] = array("",1,conversionUnits2ScreenReader1("",$unitabbr["Dekameter"],1,"n"),10,$unitabbr["Meter"]);
             $retval[3] = array("",1,$unitabbr["Meter"],10,$unitabbr["Decimeter"]);
             $retval[4] = array("",1,$unitabbr["Meter"],100,$unitabbr["Centimeter"]);
             $retval[5] = array("",1,$unitabbr["Meter"],1000,$unitabbr["Millimeter"]);
@@ -1860,15 +1863,15 @@ function conversionLength2() {
         #region American to Metric Conversion
 
 		if($fullname==0) {
-			$retval[0] = array("",1,$unitabbr["inch"],round(2.54, $rounding),$unitabbr["centimeter"]);      // https://www.wolframalpha.com/input/?i=convert+1+inch+to+mm
-            $retval[1] = array("",1,$unitabbr["foot"],round(0.3048, $rounding),$unitabbr["meter"]);         // https://www.wolframalpha.com/input/?i=convert+1+foot+to+dm
-            $retval[2] = array("",1,$unitabbr["yard"],round(0.9144, $rounding),$unitabbr["meter"]);         // https://www.wolframalpha.com/input/?i=convert+1+yard+to+dm
-            $retval[3] = array("",1,$unitabbr["mile"],round(1.60934400, $rounding),$unitabbr["kilometer"]); // 1.60934400 km https://www.wolframalpha.com/input/?i=convert+1+mile+to+m
+			$retval[0] = array("",1,$unitabbr["inch"],round(2.54, $rounding),$unitabbr["Centimeter"]);      // https://www.wolframalpha.com/input/?i=convert+1+inch+to+mm
+            $retval[1] = array("",1,$unitabbr["foot"],round(0.3048, $rounding),$unitabbr["Meter"]);         // https://www.wolframalpha.com/input/?i=convert+1+foot+to+dm
+            $retval[2] = array("",1,$unitabbr["yard"],round(0.9144, $rounding),$unitabbr["Meter"]);         // https://www.wolframalpha.com/input/?i=convert+1+yard+to+dm
+            $retval[3] = array("",1,$unitabbr["mile"],round(1.60934400, $rounding),$unitabbr["Kilometer"]); // 1.60934400 km https://www.wolframalpha.com/input/?i=convert+1+mile+to+m
         } else {
-			$retval[0] = array("",1,$unit["inch"],round(2.54, $rounding),$unit["centimeter"]);
-            $retval[1] = array("",1,$unit["foot"],round(0.3048, $rounding),$unit["meter"]);
-            $retval[2] = array("",1,$unit["yard"],round(0.9144, $rounding),$unit["meter"]);
-            $retval[3] = array("",1,$unit["mile"],round(1.60934400, $rounding),$unit["kilometer"]);
+			$retval[0] = array("",1,$unit["inch"],round(2.54, $rounding),$unit["Centimeter"]);
+            $retval[1] = array("",1,$unit["foot"],round(0.3048, $rounding),$unit["Meter"]);
+            $retval[2] = array("",1,$unit["yard"],round(0.9144, $rounding),$unit["Meter"]);
+            $retval[3] = array("",1,$unit["mile"],round(1.60934400, $rounding),$unit["Kilometer"]);
         }
         for($i=0;$i<4;$i+=1){
             $retval[$i][0] = "{$retval[$i][1]} {$retval[$i][2]} $sign_tick {$retval[$i][3]} {$retval[$i][4]}";
@@ -2541,10 +2544,10 @@ function conversionWeight2() {
         if($fullname==0) {
             $retval[0] = array("",1,$unitabbr["Kilogram"],1000,$unitabbr["Gram"]);
             $retval[1] = array("",1,$unitabbr["Hectogram"],100,$unitabbr["Gram"]);
-            $retval[2] = array("",1,conversionUnits2ScreenReader1("1 ",$unitabbr["Dekagram"],1,"n"),10,$unitabbr["Gram"]);
+            $retval[2] = array("",1,conversionUnits2ScreenReader1("",$unitabbr["Dekagram"],1,"n"),10,$unitabbr["Gram"]);
             $retval[3] = array("",1,$unitabbr["Gram"],10,$unitabbr["Decigram"]);
             $retval[4] = array("",1,$unitabbr["Gram"],100,$unitabbr["Centigram"]);
-            $retval[5] = array("",1,$unitabbr["Gram"],100,$unitabbr["Milligram"]);
+            $retval[5] = array("",1,$unitabbr["Gram"],1000,$unitabbr["Milligram"]);
             $retval[6] = array("",1,$unitabbr["Metric Ton"],1000,$unitabbr["Kilogram"]);
         } else {
             $retval[0] = array("",1,$unit["Kilogram"],1000,$unit["Gram"]);
@@ -2552,7 +2555,7 @@ function conversionWeight2() {
             $retval[2] = array("",1,$unit["Dekagram"],10,$unit["Gram"]);
             $retval[3] = array("",1,$unit["Gram"],10,$unit["Decigram"]);
             $retval[4] = array("",1,$unit["Gram"],100,$unit["Centigram"]);
-            $retval[5] = array("",1,$unit["Gram"],100,$unit["Milligram"]);
+            $retval[5] = array("",1,$unit["Gram"],1000,$unit["Milligram"]);
             $retval[6] = array("",1,$unit["Metric Ton"],1000,$unit["Kilogram"]);
         }
         for($i=0;$i<7;$i+=1){
@@ -2662,15 +2665,30 @@ function conversionArea() {
         $rounding = 2;
     }
 
+    // in the original version the sign and tick argument
+    // were reversed
     if ( count($args)>3 && !is_null($args[3]) ) {
-        $sign = verifyEqualSign($args[3]);
+        $args3input =  $args[3];
+        if ( count($args)>4 && !is_null($args[4]) ) {
+          $args4input =  $args[4];
+        } else {
+            $args4input = "";
+        }
+
+        // was args3input the tick argument and args4input the sign - if so switch
+        // should not be needed - but this wll prevent anyone that used this before
+        // the release from displaying about = signs (the default if the 3rd argument is not a = or ~)
+        if($args3input=="y" || $args3input=="n" || $args4input = "=" || $args4input = "~") {
+            $signinput = $args4input;
+            $tickinput = $args3input;
+        } else {
+            $signinput = $args3input;
+            $tickinput = $args4input;
+        }
+        $sign = verifyEqualSign($signinput);
+        $tick = verifyTickMarks($tickinput);
     } else {
         $sign = "=";
-    }
-
-    if ( count($args)>4 && !is_null($args[4]) ) {
-        $tick = verifyTickMarks($args[4]);
-    } else {
         $tick = "";
     }
 
@@ -2911,15 +2929,30 @@ function conversionVolume() {
         $rounding = 2;
     }
 
+    // in the original version the sign and tick argument
+    // were reversed
     if ( count($args)>3 && !is_null($args[3]) ) {
-        $sign = verifyEqualSign($args[3]);
+        $args3input =  $args[3];
+        if ( count($args)>4 && !is_null($args[4]) ) {
+            $args4input =  $args[4];
+        } else {
+            $args4input = "";
+        }
+
+        // was args3input the tick argument and args4input the sign - if so switch
+        // should not be needed - but this wll prevent anyone that used this before
+        // the release from displaying about = signs (the default if the 3rd argument is not a = or ~)
+        if($args3input=="y" || $args3input=="n" || $args4input = "=" || $args4input = "~") {
+            $signinput = $args4input;
+            $tickinput = $args3input;
+        } else {
+            $signinput = $args3input;
+            $tickinput = $args4input;
+        }
+        $sign = verifyEqualSign($signinput);
+        $tick = verifyTickMarks($tickinput);
     } else {
         $sign = "=";
-    }
-
-    if ( count($args)>4 && !is_null($args[4]) ) {
-        $tick = verifyTickMarks($args[4]);
-    } else {
         $tick = "";
     }
 
@@ -2995,12 +3028,21 @@ function conversionWeight() {
 
 }
 
+//  WAMAP Question ID: 201697
 
-
-// 2022-05-22 ver 23 - changed all string references to two arrays $unit and $unitabbr
-//  through
-// 2022-05-17
+// 2022-xx-xx ver 27 - TODO: add a make fraction converion function
 //
+// 2022-10-10 ver26.3- Fixed Typo on  1 acre = 43,560 ft^2 and 1 mi = 640 acre
+//  through            100 mg, mL
+// 2022-10-12          decigram abbriavation
+//
+// 2022-08-17 ver 25 - Fixed Typos
+//
+// 2022-05-24 ver 24 - changed all string references to two arrays $unit and $unitabbr. Converted conversion functions to return
+//                     an array of values with the first value an array of conversion strings (equivalent to the original function)
+//  through            added checks in conversionAreaand conversionVolume for switched sign and tick arguments and corrected them (should not be needed)
+// 2022-05-17
+// 2022-05-16 ver 23 - has conversion_detectlanguage functions that wer eliminated as they interferred with gettext function
 // 2022-05-16 ver 22 - reworking conversion to add _() to all words in file so gettext can be run for a translation file
 // 2022-05-09 ver 21 - Converted to language detection with gettext _('') as a fallback.
 // 2022-05-04 ver 20 - Changed all spelling _('') to functions for easier maintance.

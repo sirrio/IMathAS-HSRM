@@ -349,7 +349,7 @@ if (!(isset($teacherid))) { // loaded by a NON-teacher
 		exit;
 	} else { //DEFAULT DATA MANIPULATION
 		$pagetitle = "Mass Change Dates";
-		$placeinhead = "<script type=\"text/javascript\" src=\"$staticroot/javascript/masschgdates.js?v=041621\"></script>";
+		$placeinhead = "<script type=\"text/javascript\" src=\"$staticroot/javascript/masschgdates.js?v=121422\"></script>";
 		$placeinhead .= "<style>.show {display:inline;} \n .hide {display:none;} td.dis {color:#ccc;opacity:0.5;}\n td.dis input {color: #ccc;}</style>";
 	}
 }
@@ -529,7 +529,9 @@ if ($overwriteBody==1) {
 				if (is_array($item)) {
 					$addto[] = 'Block'.$parent.'-'.($k+1);
 					$prefix['Block'.$parent.'-'.($k+1)] = $pre;
-					flattenitems($item['items'],$addto,$parent.'-'.($k+1),$pre.' ');
+                    if (!empty($item['items'])) {
+					    flattenitems($item['items'],$addto,$parent.'-'.($k+1),$pre.' ');
+                    }
 				} else {
 					$addto[] = $itemsassoc[$item];
 					$prefix[$itemsassoc[$item]] = $pre;

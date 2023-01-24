@@ -1,7 +1,7 @@
 <?php
 require_once("../includes/sanitize.php");
 
-if ($_GET['cid']==="embedq") {
+if (!isset($_GET['cid']) || $_GET['cid']==="embedq") {
 	$_SESSION = array();
 	require("../init_without_validate.php");
 
@@ -9,21 +9,24 @@ if ($_GET['cid']==="embedq") {
 	$_SESSION['secsalt'] = "12345";
 	$_SESSION['graphdisp'] = 1;
 	$_SESSION['mathdisp'] = 1;
+    $_SESSION['useed'] = 0;
 	if (isset($_GET['theme'])) {
 		$coursetheme = 	$_GET['theme'];
 	}
+    $myrights = 5;
 } else {
 	require("../init.php");
 }
 
 $id = Sanitize::onlyInt($_GET['id']);
-$sig = $_GET['sig'];
-$t = Sanitize::onlyInt($_GET['t']);
+$sig = $_GET['sig'] ?? '';
+//$t = Sanitize::onlyInt($_GET['t']);
 $_SESSION['coursetheme'] = $coursetheme;
 
 $flexwidth = true;
 $isdiag = false;
 $useeqnhelper = false;
+$useeditor = 0;
 $isfw = false;
 require("header.php");
 echo '<p><b style="font-size:110%">'._('Written Example').'</b> '._('of a similar problem').'</p>';

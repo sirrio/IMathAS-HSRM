@@ -142,7 +142,7 @@ class FunctionExpressionScorePart implements ScorePart
                 $toevalGivenans = $givenans;
             }
 
-            $givenansfunc = parseMathQuiet($toevalGivenans, $vlist, [], $flist);
+            $givenansfunc = parseMathQuiet($toevalGivenans, $vlist, [], $flist, true);
             if ($givenansfunc === false) { //parse error
                 continue;
             }
@@ -193,9 +193,9 @@ class FunctionExpressionScorePart implements ScorePart
                             $thisreqtimes = '';
                         }
                     } else if ($ansidx<$origanscnt) {
-                        $thisreqtimes = $requiretimes[0];
+                        $thisreqtimes = $requiretimes[0] ?? '';
                     } else {
-                        $thisreqtimes = $requiretimes[$ansidx-$origanscnt+1];
+                        $thisreqtimes = $requiretimes[$ansidx-$origanscnt+1] ?? '';
                     }
                 } else {
                     $thisreqtimes = $requiretimes;
