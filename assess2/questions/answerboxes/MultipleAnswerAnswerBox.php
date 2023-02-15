@@ -42,7 +42,7 @@ class MultipleAnswerAnswerBox implements AnswerBox
         $style = '';
         $params = [];
 
-        $optionkeys = ['answers', 'noshuffle', 'displayformat', 'readerlabel'];
+        $optionkeys = ['answers', 'noshuffle', 'displayformat', 'readerlabel','answerformat'];
         foreach ($optionkeys as $optionkey) {
             ${$optionkey} = getOptionVal($options, $optionkey, $multi, $partnum);
         }
@@ -71,12 +71,14 @@ class MultipleAnswerAnswerBox implements AnswerBox
             $RND->shuffle($randkeys);
         }
         $hasNoneOfThese = '';
-        if (count($questions) > 1 && trim($answers) == "") {
+        if ((count($questions) > 1 && trim($answers) == "") || $answerformat == 'addnone') {
             $qstr = strtolower($questions[count($questions) - 1]);
             if (strpos($qstr, 'none of') === false) {
                 $questions[] = _('None of these');
                 array_push($randkeys, count($questions) - 1);
-                $answers = count($questions) - 1;
+                if (count($questions) > 1 && trim($answers) == "") {
+                    $answers = count($questions) - 1;
+                }
             }
             $hasNoneOfThese = 'data-multans="hasnone"';
         } else if (count($questions) > 1 && ($noshuffle == 'all' || $noshuffle == 'last')) {

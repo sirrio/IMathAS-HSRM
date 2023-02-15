@@ -2100,6 +2100,14 @@ different numbers that are not opposites:
 </p>
 <pre>$a,$b = diffrands(-5,5,2) where ($a+$b!=0)</pre>
 <p>
+<p>Beware that the system will give up if it's unable to meet the specified conditions after 200 tries, 
+    so be sure your <code>where</code> condition has fairly high probability of success, ideally at least 10%.  If it doesn't,
+    you should consider where there are other ways to generate your values.  Alternatively, you can 
+    specify a fallback value to use if the condition fails using <code>else</code>:
+</p>
+</p>
+<pre>$a = rand(1,100) where (gcd($a,$b)==1) else ($a = 7)</pre>
+<p>
 &quot;if&quot; is used to make an assignment conditional.  For example:
 </p>
 <pre>
@@ -2169,6 +2177,16 @@ if ($a==0) {
   $a = rand(-5,-1)
   $b = rand(1,5)
 } where ($a+$b !==0)
+</pre>
+<p>or with a fallback</p>
+<pre>
+{
+  $a = rand(-5,-1)
+  $b = rand(1,5)
+} where ($a+$b !==0) else {
+  $a = -3
+  $b = 5
+}
 </pre>
 
 <h3 id="loops">Loops</h3>
@@ -2257,12 +2275,15 @@ The following macros create graphs or tables:
 <ul>
 <li><strong>showarrays(string,array,[string,array]...,[options])</strong>:  Creates a tabular display of the data in the array(s) as column(s), with the strings
     as column headers.  Alternatively you can call this function with arguments
-    showarrays(array of column headers, array of data arrays, [options]).  Options can be a string = "c", "r", or "l" to center, left-align, or right align data,
+    showarrays(array of column headers, array of data arrays, [options]).  Options can be a string = "c", "l", or "r" to center, left-align, or right align data,
 	  or can be an array with $opts["align"] for alignment, $opts["tablealign"]="center" to center the whole table,
       and $opts["caption"] to add a caption to the table.  To align each column differently, provide a
 	  a string with a character for each column, like "rcc"</li>
-<li><strong>showdataarray(array,[columns])</strong>:  Creates a tabular display of the data in the array with no headers.  Data is presented
-    in one column unless second argument is provided, in which case the data will be distributed over the specified number of columns.</li>
+<li><strong>showdataarray(array,[columns,options])</strong>:  Creates a tabular display of the data in the array with no headers.  Data is presented
+    in one column unless second argument is provided, in which case the data will be distributed over the specified number of columns.
+    Options can be a string = "c", "l", or "r" to center, left-align, or right align data,
+    or can be an array with $opts["align"] for alignment, $opts["tablealign"]="center" to center the whole table,
+    and $opts["caption"] to add a caption to the table.</li>
 <li><strong>horizshowarrays(string,array,[string,array]...)</strong>:  Creates a tabular display of the data in the array(s) as row(s), with the strings
     as row labels.  Does not text wrap, so only use for small data sets.</li>
 <li><strong>showrecttable(data array of arrays,columnlabels,rowlabels,[format])</strong>:  Creates a tabular display of a 2x2 data table, where $data[0] is the first row of the table.
@@ -2581,8 +2602,8 @@ These macros are used for mathematical calculations:
 <li><strong>sin(t), cos(t), tan(t), sec(t), csc(t), cot(t)</strong>: The usual trig functions</li>
 <li><strong>arcsin(v), arccos(v), arctan(v), atan2(y,x)</strong>: The inverse trig functions</li>
 <li><strong>abs(v)</strong>: Absolute value</li>
-<li><strong>gcd(a,b)</strong>: Greatest common divisor of a and b</li>
-<li><strong>lcm(a,b)</strong>: Least common multiple of a and b</li>
+<li><strong>gcd(a,b,[c,d,...])</strong>: Greatest common divisor of the inputs</li>
+<li><strong>lcm(a,b,[c,d,...])</strong>: Least common multiple of the inputs</li>
 <li><strong>sign(a,[option])</strong>:  Returns the sign of a, as 1 or -1.  If option is set to true, returns a string "+" or "-" instead. If option
   is set to "onlyneg", it returns the string "-" if a is negative, or "" otherwise.</li>
 <li><strong>sgn(a)</strong>: Returns the sign of a, as -1, 0, or 1.</li>
@@ -3240,8 +3261,14 @@ of choices is automatically randomized.
     if $scoremethod="takeanything", full credit will be given for any response.</dd>
 <dt>$displayformat = "horiz", "2column, "3column", or "inline" </dt>
 	<dd>Will lay out the choices horizontally, in multiple columns, or inline with text rather than using the default vertical layout</dd>
-<dt>$noshuffle = "all" </dt>
-	<dd>If $noshuffle="all", then the $questions array will not be randomized (shuffled)</dd>
+<dt>$noshuffle = "all" or "last" </dt>
+	<dd>If $noshuffle="all", then the $questions array will not be randomized (shuffled). 
+        If $noshuffle="last", then the last element of $questions will not be randomized (shuffled) but the others will.
+    </dd>
+<dt>$answerformat = "addnone" </dt>
+	<dd>Adds "None of these" to the options. This is added automatically if <code>$answers=""</code>, and you can 
+        add "None of these" yourselv to <code>$questions</code>, but this provides another way to always include the 
+        "None of these" option.</dd>
 <dt>$readerlabel = string</dt>
     <dd>A string that will be used as a visually hidden label on the input box for screenreaders.</dd>
 <dt>$answerbox (In Question Text)</dt>
@@ -3628,7 +3655,7 @@ drawn line from the correct line.
 	<dd>Sets all-or-nothing grading.  If score &lt; $abstolerance, the student receives 0 for the question (note: score is
 	between 0 and 1).  Otherwise
 	the student will receive full credit.  Not set by default.</dd>
-<dt>$scoremethod = "takeanything", "direction", "relativelength"</dt>
+<dt>$scoremethod = "takeanything", "direction", "relativelength", "ignoreoverlap"</dt>
 		<dd>When "takeanything" is used, this will give full credit for any non-blank answer.  This might be of use with the freehand drawing option.
             <br>
             "direction" and "relativelength" are only used for vectors.  
@@ -3636,6 +3663,8 @@ drawn line from the correct line.
               will only score direction for displacement vectors.
             "relativelength" will score like "direction", but will also check that the drawn vectors have 
               correct lengths relative to each other.
+              <br>
+            "ignoreoverlap" only works with $answerformat="line", and will not deduct for overlapped lines.
         </dd>
 <dt>$readerlabel = string</dt>
     <dd>A string that will be used as a visually hidden label on the input box for screenreaders.</dd>
@@ -3986,11 +4015,13 @@ A student is asked to enter an interval notation answer. Example: (2,5]U(7,oo)
 	<dd>Defines the decimal accuracy required (ie 2 for two decimal places).  This will put a message in the answer tips stating the
 	decimals required.  If neither $abstolerance or $reltolerance is set, this will set the tolerance, otherwise the provided tolerance
 	will be used (even if it doesn't agree with the $reqdecimal setting).</dd>
-<dt>$answerformat = "normalcurve" or "list"</dt>
+<dt>$answerformat = "normalcurve" or "list" or "allowsloppyintervals"</dt>
 	<dd>"normalcurve" Changes the question to use a "shade the area under the normal curve" widget. Define $answer using the interval that should be
     shaded. Note that the shading tool only allows selection of z-values to 1 decimal place.
     <br/>
-    "list" will accept a list of comma-separated intervals like $answer="[2,3),(5,7)"</dd>
+    "list" will accept a list of comma-separated intervals like $answer="[2,3),(5,7)"
+    <br/>
+    "allowsloppyintervals" will accept unsimplified unions, so will count [2,5)U(3,7) as equivalent to [2,7)</dd>
 <dt>$scoremethod = "partialcredit"</dt>
   <dd>By default, interval answers will be marked all right or all wrong.  Setting $scoremethod = "partialcredit"
 		will changing the scoring mode to give partial credit. (new assessment system only).</dd>
@@ -4031,7 +4062,7 @@ interval notation.
 
 <p><strong>Optional Variables</strong></p>
 <dl>
-<dt>$answerformat = "fraction", "reducedfraction", "mixednumber", "scinot", "fracordec", "nodecimal", "notrig", "list", or "inequality" </dt>
+<dt>$answerformat = "fraction", "reducedfraction", "mixednumber", "scinot", "fracordec", "nodecimal", "notrig", "list", "allowsloppyintervals", or "inequality" </dt>
 	<dd>Requires the each value in the answer to be a single fraction (like 10/6), a reduced fraction (like 5/3), a reduced mixed number (like 2_1/2), scientific notation (like 2.3*10^4), a single fraction or decimal, an answer
 	without decimals (also disallows 10^-2 and 3E-2), or
 	an answer without trig functions (sin,cos,tan,sec,csc,cot).  Multiple options can be specified like $answerformat="nodecimal,notrig".<br/>
@@ -4039,7 +4070,8 @@ interval notation.
     interval notation (it will be reformatted to an inequality automatically for the Show Answer).  Use $variables="y" to change the variable of the inequality.
     <br/>
     "list" will accept a list of comma-separated intervals like $answer="[2,3),(5,7)".  Does not work with "inequality".
-	</dd>
+	<br/>
+    "allowsloppyintervals" will accept unsimplified unions, so will count [2,5)U(3,7) as equivalent to [2,7)</dd>
 <dt>$reltolerance = a decimal value </dt>
 	<dd>Defines the largest relative error that will be accepted.  If this is not set, a relative error of .001 (.1%) is
 	used by default.</dd>

@@ -188,7 +188,7 @@ if (!empty($CFG['assess2-use-vue-dev'])) {
   $placeinhead .= '<script src="'.$staticroot.'/mathquill/mqedlayout.js?v=071122" type="text/javascript"></script>';
 } else {
   $placeinhead .= '<script src="'.$staticroot.'/mathquill/mathquill.min.js?v=112822" type="text/javascript"></script>';
-  $placeinhead .= '<script src="'.$staticroot.'/javascript/assess2_min.js?v=011723" type="text/javascript"></script>';
+  $placeinhead .= '<script src="'.$staticroot.'/javascript/assess2_min.js?v=021123" type="text/javascript"></script>';
 }
 
 $placeinhead .= '<script src="'.$staticroot.'/javascript/assess2supp.js?v=041522" type="text/javascript"></script>';
@@ -367,11 +367,12 @@ if ($overwriteBody==1) {
 
   // DO DISPLAY
   echo '<hr/>';
-
+  $starttime = microtime(true);
   $disp = $a2->displayQuestion($qn, [
     'showans' => true,
     'showallparts' => ($hasSeqParts && !empty($_GET['showallparts']))
   ]);
+  $gentime = microtime(true) - $starttime;
   if (isset($_SESSION['userprefs']['useeqed']) && $_SESSION['userprefs']['useeqed'] == 0) {
       $disp['jsparams']['noMQ'] = true;
   }
@@ -428,6 +429,7 @@ if ($overwriteBody==1) {
 
 	printf("<p>"._("Question ID:")." %s.  ", Sanitize::encodeStringForDisplay($qsetid));
 	echo '<span class="small subdued">'._('Seed:').' '.Sanitize::onlyInt($seed) . '.</span> ';
+    echo '<span class="small subdued">'._('Generated in ').round(1000*$gentime).'ms</span> ';
   if ($line['ownerid'] == $userid) {
     echo '<a href="moddataset.php?cid='. Sanitize::courseId($cid) . '&id=' . Sanitize::onlyInt($qsetid).'" target="_blank">';
     echo _('Edit Question') . '</a>';

@@ -297,9 +297,9 @@ function AMQgetSymbol(str) {
   }
   if (st == decimalsign) {
     st = str.slice(k,k+1);
+    k++;
     if ("0"<=st && st<="9") {
       integ = false;
-      k++;
       while ("0"<=st && st<="9" && k<=str.length) {
         st = str.slice(k,k+1);
         k++;
@@ -725,7 +725,11 @@ return function(str,elid,nomatrices) {
     AMQTallowmatrices = false;
  }
   str = str.replace(/(&nbsp;|\u00a0|&#160;|{::})/g,"");
-  str = str.replace(/<([^<].*?,.*?[^>])>/g,"<<$1>>");
+  if (document.getElementById(elid) && 
+    document.getElementById(elid).getAttribute("data-mq").match(/(ntuple|string)/)
+  ) {
+    str = str.replace(/<([^<].*?,.*?[^>])>/g,"<<$1>>");
+  }
   str = str.replace(/&gt;/g,">");
   str = str.replace(/&lt;/g,"<");
   str = str.replace(/\s*\bor\b\s*/g,'" or "');
