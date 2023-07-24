@@ -78,16 +78,23 @@
 	} else {
 		$canedit = 0;
 	}
-    $itemorder = explode(',',preg_replace('/\d+\|\d+~/','',$itemorder));
+    $itemorder = explode(',',$itemorder);
     $prevqid = -1; $nextqid = -2;
+    $curcnt = 1;
     foreach ($itemorder as $i=>$item) {
         $sub = explode('~',$item);
+        if (count($sub)>1) {
+            $subdets = explode('|', $sub[0]);
+            if (count($subdets)>1) {
+                array_shift($sub);
+            }
+        }
         foreach ($sub as $k=>$subitem) {
             if ($subitem == $qid) {
                 if (count($sub)==1) {
-                    $curqloc = $i+1;
+                    $curqloc = $curcnt;
                 } else {
-                    $curqloc = ($i+1).'-'.($k+1);
+                    $curqloc = $curcnt.'-'.($k+1);
                 }
                 $nextqid = -1;
             } else if ($nextqid == -1) {
@@ -96,6 +103,11 @@
             } else {
                 $prevqid = $subitem;
             }
+        }
+        if (count($sub)==1 || count($subdets)==1) {
+            $curcnt++;
+        } else {
+            $curcnt+=$subdets[0];
         }
     }
 
@@ -347,7 +359,7 @@
 
 
 	$useeditor='review';
-	$placeinhead = '<script type="text/javascript" src="'.$staticroot.'/javascript/rubric_min.js?v=022622"></script>';
+	$placeinhead = '<script type="text/javascript" src="'.$staticroot.'/javascript/rubric_min.js?v=022223"></script>';
 	$placeinhead .= '<script type="text/javascript" src="'.$staticroot.'/javascript/gb-scoretools.js?v=020223"></script>';
 	$placeinhead .= '<link rel="stylesheet" type="text/css" href="'.$staticroot.'/assess2/vue/css/index.css?v='.$lastupdate.'" />';
 	$placeinhead .= '<link rel="stylesheet" type="text/css" href="'.$staticroot.'/assess2/vue/css/gbviewassess.css?v='.$lastupdate.'" />';
@@ -367,7 +379,7 @@
         $placeinhead .= '<script src="'.$staticroot.'/javascript/assess2_min.js?v=021123" type="text/javascript"></script>';
     }
     
-	$placeinhead .= '<link rel="stylesheet" type="text/css" href="'.$staticroot.'/mathquill/mathquill-basic.css">
+	$placeinhead .= '<link rel="stylesheet" type="text/css" href="'.$staticroot.'/mathquill/mathquill-basic.css?v=021823">
 	  <link rel="stylesheet" type="text/css" href="'.$staticroot.'/mathquill/mqeditor.css">';
 
 	$placeinhead .= "<script type=\"text/javascript\">";
@@ -604,6 +616,7 @@
 
         foreach ($locdata as $vernum=>$lockeys) {
             foreach ($lockeys as $loc) {
+                $teacherreview = $line['userid'];
                 $qdata = $assess_record->getGbQuestionVersionData($loc, true, $vernum, $cnt);
                 $answeightTot = array_sum($qdata['answeights']);
                 $qdata['answeights'] = array_map(function($v) use ($answeightTot) { return $v/$answeightTot;}, $qdata['answeights']);
@@ -658,7 +671,6 @@
                     }
                 }
 
-                $teacherreview = $line['userid'];
                 /*
                 To re-enable, need to define before $qdata, but figure another way to
                 get answeights/points.
