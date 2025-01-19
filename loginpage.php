@@ -82,7 +82,7 @@ $(function() {
 </div>
 <div class="text">
 <p><?php echo $installname; ?> <b>ist ein webbasiertes System für Mathematikaufgaben und Kursverwaltung der Hochschule RheinMain.</b>  </p>
- <img style="float: left; margin-right: 20px; padding-top: 10px; padding-bottom: 30px;" src="<?php echo $imasroot; ?>/img/screens.jpg" alt="Computer screens"/>
+ <img style="float: left; margin-right: 20px; padding-top: 10px;" src="<?php echo $imasroot; ?>/img/screens.jpg" alt="Computer screens"/>
 
 <p>Das System wurde für verschiedene Formen von umfangreichen Mathematikaufgaben entworfen. Studierende können durch generierte Tests und automatische Auswertung direkt Rückmeldung (als numerische oder algebraische Antwort) bekommen.</p>
 
