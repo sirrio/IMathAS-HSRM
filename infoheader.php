@@ -7,8 +7,8 @@
 
 <ul id="navlist">
 <li><a href="<?php echo $imasroot; ?>/index.php">Home</a></li>
-<li><a href="<?php echo $imasroot; ?>/diag/index.php">Formeln eingeben</a></li>
-<li><a href="<?php echo $imasroot; ?>/diag/index.php">Dokumentation (Dozent innen)</a></li>
+<li><a href="<?php echo $imasroot; ?>/info/enteringanswers.php">Formeln eingeben</a></li>
+<li><a href="<?php echo $imasroot; ?>/docs/docs.php">Dokumentation (Dozent:innen)</a></li>
 </ul>
 
 <div id="header">
