@@ -81,12 +81,12 @@ $(function() {
 </form>
 </div>
 <div class="text">
-<p><?php echo $installname; ?> <b>ist ein webbasiertes System für Mathematikaufgaben und Kursverwaltung der Hochschule RheinMain.</b>  </p>
+<p><b><?php echo $installname; ?> ist ein webbasiertes System für Mathematikaufgaben und Kursverwaltung der Hochschule RheinMain.</b></p>
  <img style="float: left; margin-right: 20px; padding-top: 10px;" src="<?php echo $imasroot; ?>/img/screens.jpg" alt="Computer screens"/>
 
 <p>Das System wurde für verschiedene Formen von umfangreichen Mathematikaufgaben entworfen. Studierende können durch generierte Tests und automatische Auswertung direkt Rückmeldung (als numerische oder algebraische Antwort) bekommen.</p>
 
-<p>Wenn Sie bereits ein Benutzerinnenkonto haben, können Sie sich rechts anmelden.</p>
+<p>Wenn Sie bereits ein Benutzer:innenkonto haben, können Sie sich rechts anmelden.</p>
 <p>Studierende der Hochschule RheinMain gelangen ausschließlich über die hochschuleigenen Plattformen ILIAS oder Stud.IP zu den Kursen in IMathAS.</p>
 <p>Dozent innen der Hochschule RheinMain können unter didaktik(at)hs-rm.de eine Dozent:innenkennung beantragen. Damit erhalten Sie Zugang zur hochschulübergreifenden Aufgabenbibliothek und können eigene Aufgaben und Tests für Ihre Studierenden erstellen.</p>
 
