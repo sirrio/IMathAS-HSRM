@@ -1,0 +1,291 @@
+@font-face {
+    font-family: FlamaBasic;
+    src: url(/fonts/Flama-Basic.woff);
+}
+@font-face {
+    font-family: FlamaMedium;
+    src: url(/fonts/Flama-Medium.woff);
+}
+/*General settings - fonts, overall page background, etc*/
+body {
+	font-family: 'FlamaBasic', Arial, Arial, Helvetica, sans-serif;
+	font-size: 95%;
+}
+
+.centered-content {
+    max-width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+/*Link styles*/
+a:link {
+	text-decoration: none;
+    color: black;
+}
+a:visited {
+	text-decoration: none;
+    color: black;
+}
+a:hover {
+	text-decoration: underline;
+    color: #c20008;
+}
+
+/*Container for course items*/
+div.item {
+	/*border: 1px solid #000;*/
+	background-color: #fff;
+}
+
+/*Container for editor*/
+div.editor {
+	border: 1px solid #000;
+}
+
+/*Default block container*/
+div.block, div.blockitems div.blockitems div.block {
+	/*border: 1px solid #000;*/
+	background-color: #009881;
+    color: white;
+}
+
+/*Default block item container*/
+div.blockitems, div.blockitems div.blockitems div.blockitems {
+	/*border: 1px solid #000;*/
+	border-top: 0px;
+	background-color: white;
+}
+
+/*Second level default block container*/
+div.blockitems div.block {
+	background-color: #dfd;
+}
+
+/*Second level default block item container */
+div.blockitems div.blockitems {
+	background-color: #efe;
+}
+
+ul#navlist li a {
+    background-color:#c20008;	
+}
+
+/*Icons*/
+div.icon {
+	color:#c20008;	
+	border: 1px solid #c20008;
+	font-weight: bolder;
+}
+
+/*Breadcrumb bar*/
+div.breadcrumb {
+	/*border: 1px solid #000;*/
+	border: 0px;	
+	background-color: #c20008;
+    color: white;
+}
+
+/*Control panels*/
+div.cp {
+	/*border: 1px solid #000;*/
+	background-color: #ddd;
+}
+div.cpmid {
+	/*border: 1px solid #000;*/
+	background-color: #ddd;
+}
+
+table thead th {
+	font-weight:bold;
+	cursor:pointer;
+}
+
+/*Tables */
+table.gb thead th, table.gbl thead th, table.gbl thead th.locked {
+	border-bottom: 2px solid #c20008;
+	background-color: #eef;
+}
+tr.even, tr.even td {
+	background-color: #fff;	
+}
+tr.odd, tr.odd td {
+	background-color: #dfd;
+}
+tr.bordered  td {
+	border-top: 1px solid #000;
+	border-bottom: 1px solid #000;
+}
+tr.highlight, tr.highlight td {
+	background-color: #ddf;
+}
+tr.grid td {
+	border: 1px solid #000;
+}
+tr.dbltop td {
+	border-top: 3px double #000;
+}
+
+table.gbl td.locked, table.gbl th.locked {
+	border-right: 2px solid #c20008;
+}
+
+/*Category header colors*/
+table.gb .catdf {
+	background-color: #eef;
+}
+table.gb .cat0 {
+	background-color: #ddf;
+}
+table.gb .cat1 {
+	background-color: #dfd;
+}
+table.gb .cat2 {
+	background-color: #fdd;
+}
+table.gb .cat3 {
+	background-color: #dff;
+}
+table.gb .cat4 {
+	background-color: #ffd;
+}
+table.gb .cat5 {
+	background-color: #fdf;
+}
+table.gb .cat6 {
+	background-color: #aaf;
+}
+table.gb .cat7 {
+	background-color: #afa;
+}
+table.gb .cat8 {
+	background-color: #faa;
+}
+table.gb .cat9 {
+	background-color: #aff;
+}
+.cattothdr {
+	font-variant: small-caps
+}
+
+/*Fake look of links for Javascript onclicks*/
+span.link {
+	text-decoration: underline;
+	color: #c20008;
+	cursor: pointer;
+}
+
+
+/*Containers for instructor leftbar, main content*/
+#leftcontent {
+		background:#eee;
+		/*border:1px solid #000;*/
+		color:#000;
+}
+
+#centercontent {
+		background:#fff;
+}
+
+div.ddmenu {
+	padding: 5px;
+	background: #eeffee;
+}
+
+/*colors and borders for assessments*/
+/*seq question css*/
+div.curquestion {
+
+}
+div.inactive {
+	border: 1px solid #bbd;
+}
+div.prequestion {
+	border: 1px solid #bbd;
+}
+hr.seq {
+
+}
+div.seqqinfocur {
+
+}
+div.seqqinfocur span.current{
+
+}
+div.seqqinfoavail {
+
+}
+div.seqqinfoinactive {
+
+}
+div.todoquestion {
+	background-color: #ffffcc; 
+	border: 0px; 
+}
+/*all questions*/
+div.question {
+	background-color: #ddf; 
+	border: 1px solid #bbd;
+}
+
+ul#navlist {
+    background-color: #c20008;
+}
+
+div.review { /*info bar*/
+	margin-top: -6px;
+	background-color: #e0ffe0;
+	border: 1px solid #bbd;
+}
+div.intro {
+	border: 0px;
+	background-color: #ffc;
+}
+div.navbar {
+	background:#e0ffe0;
+	border: 1px solid #bbd;
+	color:#000;
+}
+div.navbar a {
+	color: #c20008;
+}
+span.current {
+	background-color: #ffa;
+}
+span.done {
+	text-decoration: line-through;
+}
+a.newnote {
+	font-size: 90%;
+}
+
+div.breadcrumb > a {
+    color: white;
+}
+
+div.breadcrumb {
+    padding-left: 15px !important;
+}
+
+.abutton:hover {
+    color: black;
+}
+
+div#viewbuttoncont a.buttonactive {
+    background-color: #760005;
+}
+div#viewbuttoncont a.buttoninactive:hover {
+	background-color: #760005;
+}
+div#viewbuttoncont a.buttoninactive {
+	background-color: #c20008;
+}
+
+ul#navlist li a:hover, ul#navlist li a:focus{
+    background-color: #3a3a3a;
+    color: #fff;
+}
+#logo {
+    padding-bottom: 10px;
+}

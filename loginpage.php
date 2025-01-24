@@ -55,10 +55,10 @@ if (!isset($imasroot)) { //don't allow direct access to loginpage.php
 </table>
 <div class=textright><input type="submit" value="Login"></div>
 
-<div class="textright">
-<a href="mailto:Didaktik@hs-rm.de?subject=IMathAS Passwort Vergessen&body=Hallo, Ich habe leider das Passwort für mein IMathAS Konto vergessen. ">Passwort vergessen</a>
-<a href="mailto:Didaktik@hs-rm.de?subject=IMathAS Username Vergessen&body=Hallo, Ich habe leider den Username für mein IMathAS Konto vergessen.">Username vergessen</a>
-</div>
+<table>
+<tr><td><a href="mailto:didaktik@hs-rm.de?subject=IMathAS Passwort Vergessen&body=Hallo, Ich habe leider das Passwort für mein IMathAS Konto vergessen. ">Passwort vergessen</a></td></tr>
+<tr><td><a href="mailto:didaktik@hs-rm.de?subject=IMathAS Username Vergessen&body=Hallo, Ich habe leider den Username für mein IMathAS Konto vergessen.">Username vergessen</a></td></tr>
+</table>
 <!-- 
 <div class="textright"><a href="<?php echo $imasroot; ?>/forms.php?action=newuser">Register as a new student</a></div> 
 <div class="textright"><a href="<?php echo $imasroot; ?>/forms.php?action=resetpw">Forgot Password</a><br/>

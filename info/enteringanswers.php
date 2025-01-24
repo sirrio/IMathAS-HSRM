@@ -15,6 +15,7 @@ img {
 </head>
 <body>
 <?php
+	require("../headerincludehsrm.php");
 	$pagetitle = "Entering Answers";
 	require("../infoheader.php");
 ?>
