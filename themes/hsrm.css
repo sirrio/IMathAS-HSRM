@@ -289,3 +289,12 @@ ul#navlist li a:hover, ul#navlist li a:focus{
 #logo {
     padding-bottom: 10px;
 }
+
+button.primary {
+	background-color: #c20008;
+}
+
+input[type=submit].primary:enabled:hover, button.primary:enabled:hover,input[type=button].primary:enabled:hover, a.abutton.primary:hover,
+input[type=submit].primary:focus, button.primary:focus,input[type=button].primary:focus, a.abutton.primary:focus {
+    background-color: #760005;
+}
