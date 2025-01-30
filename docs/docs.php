@@ -55,5 +55,8 @@ require((isset($CFG['GEN']['diagincludepath'])?$CFG['GEN']['diagincludepath']:'.
 
 <p>Many of these guides were written with development grant support from the WA State Distance Learning Council</p>
 </div>
+<?php 
+	require("../footer.php");
+?>
 </body>
 </html>

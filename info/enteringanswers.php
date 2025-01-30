@@ -15,6 +15,7 @@ img {
 </head>
 <body>
 <?php
+	require("../headerincludehsrm.php");
 	$pagetitle = "Entering Answers";
 	require("../infoheader.php");
 ?>
@@ -110,6 +111,8 @@ parenthese or have used the wrong variables in your answer.</p>
 
 
 </div>
-
+<?php 
+	require("../footer.php");
+?>
 </body>
 </html>
